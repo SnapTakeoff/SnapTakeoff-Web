@@ -1,195 +1,93 @@
-import streamlit as st
-from PIL import Image
-import cv2
+import base64
 import numpy as np
+import cv2
 import pandas as pd
 import io
+import os
+from flask import Flask, render_template, request, send_file
 
-# --- 1. DESIGN & CONFIGURATION ---
-st.set_page_config(page_title="SnapTakeoff Prime", page_icon="🏗️", layout="wide")
+# --- CHANGE IS HERE: template_folder='.' ---
+# This tells Flask to look for html files in the current directory
+app = Flask(__name__, template_folder='.')
 
-# --- FUTURISTIC CSS OVERLAY ---
-st.markdown("""
-    <style>
-        /* Main Background: Keep it relatively light */
-        .stApp {
-            background-color: #e8eaf6; 
-        }
-        
-        /* --- THE DARK BAND (Sidebar) --- */
-        section[data-testid="stSidebar"] {
-            background-color: #0a0e17; /* Deep dark space blue/black */
-            border-right: none;
-        }
-        
-        /* Sidebar text needs to be forced light */
-        /* REMOVED 'span' from this list so it doesn't kill the logo color */
-        section[data-testid="stSidebar"] p, 
-        section[data-testid="stSidebar"] label, 
-        section[data-testid="stSidebar"] div[data-testid="stMarkdownContainer"] p {
-            color: #c9d1d9 !important;
-        }
-
-        /* --- THE FUTURISTIC BOXES (Containers) --- */
-        [data-testid="stBorderContainer"] {
-            background-color: #161b22; 
-            border: 1px solid #00d26a; 
-            box-shadow: 0 0 15px rgba(0, 210, 106, 0.3); 
-            border-radius: 10px;
-        }
-        [data-testid="stBorderContainer"] h3 {
-             color: #ffffff !important;
-             font-family: 'Orbitron', sans-serif;
-             letter-spacing: 1px;
-        }
-
-        /* --- NEON METRICS --- */
-        [data-testid="stMetricValue"] {
-            color: #00d26a !important; 
-            font-family: 'Courier New', monospace;
-            text-shadow: 0 0 5px rgba(0, 210, 106, 0.5);
-        }
-        [data-testid="stMetricLabel"] {
-            color: #8b949e !important;
-        }
-
-        /* --- TECH BUTTONS --- */
-        .stButton > button {
-            background-color: #21262d;
-            color: #00d26a;
-            border: 1px solid #30363d;
-            font-weight: bold;
-            transition: all 0.3s ease;
-        }
-        .stButton > button:hover {
-            border-color: #00d26a;
-            box-shadow: 0 0 10px #00d26a;
-            color: white;
-        }
-        
-        h1 { color: #0a0e17 !important; }
-
-    </style>
-""", unsafe_allow_html=True)
-
-
-# --- 2. LOGIC ---
-def update_slider(key): st.session_state[f"{key}_slider"] = st.session_state[f"{key}_input"]
-def update_input(key): st.session_state[f"{key}_input"] = st.session_state[f"{key}_slider"]
-
-def process_walls(image_file, threshold_val, min_line_len, max_line_gap, wall_thickness):
-    file_bytes = np.asarray(bytearray(image_file.read()), dtype=np.uint8)
+def process_walls(file_stream, thresh, min_len, gap, thick):
+    file_bytes = np.asarray(bytearray(file_stream.read()), dtype=np.uint8)
     img = cv2.imdecode(file_bytes, 1)
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
     gray_inv = cv2.bitwise_not(gray)
     _, binary = cv2.threshold(gray_inv, 200, 255, cv2.THRESH_BINARY)
-    if wall_thickness > 1:
-        kernel = np.ones((wall_thickness, wall_thickness), np.uint8)
+    
+    if thick > 1:
+        kernel = np.ones((thick, thick), np.uint8)
         binary = cv2.erode(binary, kernel, iterations=1)
         binary = cv2.dilate(binary, kernel, iterations=1)
+    
     edges = cv2.Canny(binary, 50, 150)
-    lines = cv2.HoughLinesP(edges, 1, np.pi/180, threshold=threshold_val, minLineLength=min_line_len, maxLineGap=max_line_gap)
+    lines = cv2.HoughLinesP(edges, 1, np.pi/180, threshold=thresh, minLineLength=min_len, maxLineGap=gap)
+    
     line_img = img.copy()
     total_pixels = 0
     if lines is not None:
         for line in lines:
             x1, y1, x2, y2 = line[0]
-            cv2.line(line_img, (x1, y1), (x2, y2), (0, 210, 106), 6)
+            cv2.line(line_img, (x1, y1), (x2, y2), (0, 255, 0), 5)
             total_pixels += np.sqrt((x2 - x1)**2 + (y2 - y1)**2)
-    return cv2.cvtColor(line_img, cv2.COLOR_BGR2RGB), total_pixels, img.shape[1], binary
-
-# --- 3. UI LAYOUT ---
-defaults = {'min_len': 100, 'thresh': 50, 'gap': 20, 'thick': 1}
-for key, val in defaults.items():
-    if f'{key}_slider' not in st.session_state: st.session_state[f'{key}_slider'] = val
-    if f'{key}_input' not in st.session_state: st.session_state[f'{key}_input'] = val
-
-# --- LOGO CHANGE (FIXED) ---
-st.sidebar.markdown(
-    """
-    <div style='margin-top: 10px; margin-bottom: 20px; font-size: 40px; font-weight: 800; color: white; line-height: 1;'>
-        Snap<span style='color: #FFD700 !important;'>Takeoff</span>
-    </div>
-    """, 
-    unsafe_allow_html=True
-)
-
-app_mode = st.sidebar.selectbox("", ["Home", "Upload"])
-
-if app_mode == "Home":
-    st.title("Welcome.")
-    st.markdown("""
-    ### AI-Powered Blueprint Analysis Active.
     
-    This system uses advanced computer vision to scan architectural schematics and generate immediate material requirements.
+    _, buffer = cv2.imencode('.jpg', line_img)
+    img_str = base64.b64encode(buffer).decode('utf-8')
+    return img_str, total_pixels, img.shape[1]
+
+@app.route('/')
+def home():
+    return render_template('index.html', page='home')
+
+@app.route('/tool', methods=['GET', 'POST'])
+def tool():
+    if request.method == 'GET':
+        return render_template('index.html', page='tool', params={'thresh':50, 'min_len':100, 'gap':20, 'thick':1})
+
+    if 'file' not in request.files: return "No file"
+    file = request.files['file']
+    if file.filename == '': return "No file"
+
+    thresh = int(request.form.get('thresh', 50))
+    min_len = int(request.form.get('min_len', 100))
+    gap = int(request.form.get('gap', 20))
+    thick = int(request.form.get('thick', 1))
+
+    img_str, pixels, width_px = process_walls(file, thresh, min_len, gap, thick)
     
-    **Status:** Ready for blueprint upload.
-    """)
+    return render_template('index.html', 
+                           page='tool', 
+                           result=True, 
+                           image_data=img_str, 
+                           raw_pixels=pixels,      
+                           raw_width=width_px,     
+                           params={'thresh': thresh, 'min_len': min_len, 'gap': gap, 'thick': thick})
 
-elif app_mode == "Upload":
-    st.title("Estimate Protocol Initiated")
+@app.route('/download_report', methods=['POST'])
+def download_report():
+    try:
+        feet = float(request.form.get('final_feet'))
+        cost = float(request.form.get('final_cost'))
+        sheets = float(request.form.get('final_sheets'))
+        paint = float(request.form.get('final_paint'))
+    except:
+        return "Error: Data missing."
+
+    df = pd.DataFrame({
+        "Line Item": ["Total Wall Length", "Drywall Sheets (4x8)", "Paint Gallons", "Labor & Misc", "TOTAL ESTIMATE"],
+        "Quantity": [f"{feet:.2f} ft", f"{sheets:.0f} sheets", f"{paint:.1f} gal", "-", "-"],
+        "Unit Cost": ["-", "$15.00", "$40.00", "-", "-"],
+        "Total": ["-", f"${sheets*15:.2f}", f"${paint*40:.2f}", "-", f"${cost:.2f}"]
+    })
+
+    output = io.BytesIO()
+    with pd.ExcelWriter(output, engine='openpyxl') as writer:
+        df.to_excel(writer, index=False, sheet_name='SnapTakeoff Estimate')
+    output.seek(0)
     
-    st.sidebar.markdown("---")
-    st.sidebar.caption("SENSOR CALIBRATION")
-    st.sidebar.write("**1. Wall Thickness Filter**")
-    c1, c2 = st.sidebar.columns([3, 1])
-    with c1: st.slider("", 1, 10, key='thick_slider', label_visibility="collapsed", on_change=update_input, args=('thick',))
-    with c2: st.number_input("", 1, 10, key='thick_input', label_visibility="collapsed", on_change=update_slider, args=('thick',))
-    st.sidebar.write("**2. Minimum Signal Length**")
-    c3, c4 = st.sidebar.columns([3, 1])
-    with c3: st.slider("", 50, 500, key='min_len_slider', label_visibility="collapsed", on_change=update_input, args=('min_len',))
-    with c4: st.number_input("", 50, 500, key='min_len_input', label_visibility="collapsed", on_change=update_slider, args=('min_len',))
-    st.sidebar.write("**3. Detection Sensitivity**")
-    c5, c6 = st.sidebar.columns([3, 1])
-    with c5: st.slider("", 20, 200, key='thresh_slider', label_visibility="collapsed", on_change=update_input, args=('thresh',))
-    with c6: st.number_input("", 20, 200, key='thresh_input', label_visibility="collapsed", on_change=update_slider, args=('thresh',))
-    st.sidebar.write("**4. Gap Fill Protocol**")
-    c7, c8 = st.sidebar.columns([3, 1])
-    with c7: st.slider("", 5, 100, key='gap_slider', label_visibility="collapsed", on_change=update_input, args=('gap',))
-    with c8: st.number_input("", 5, 100, key='gap_input', label_visibility="collapsed", on_change=update_slider, args=('gap',))
+    return send_file(output, download_name="SnapTakeoff_Quote.xlsx", as_attachment=True)
 
-    uploaded_file = st.file_uploader("Initialize Blueprint Scan (Drop File)", type=["jpg", "png", "jpeg"])
-
-    if uploaded_file is not None:
-        col_img, col_data = st.columns([1.5, 1])
-        uploaded_file.seek(0)
-        final_img, wall_pixels, img_w, debug_img = process_walls(
-            uploaded_file, st.session_state['thresh_input'], st.session_state['min_len_input'], st.session_state['gap_input'], st.session_state['thick_input']
-        )
-        
-        with col_img:
-            with st.container(border=True):
-                st.subheader("Target Confirmation")
-                st.image(final_img, use_container_width=True)
-            with st.expander("View Sensor Data (X-Ray)"):
-                st.image(debug_img, use_container_width=True)
-
-        with col_data:
-            with st.container(border=True):
-                st.subheader("📏 Calibration Data")
-                st.info(f"Sensor Width: {img_w} px")
-                real_width_ft = st.number_input("Real World Width (ft)", value=50, step=1)
-                scale = img_w / real_width_ft
-                total_feet = wall_pixels / scale
-                st.metric(label="Total Linear Feet Detected", value=f"{total_feet:.2f} ft")
-            
-            with st.container(border=True):
-                st.subheader("💰 Resource Allocation")
-                sheets = (total_feet * 8) / 32
-                paint = (total_feet * 8) / 400
-                cost_drywall = sheets * 15
-                cost_paint = paint * 40
-                c_a, c_b = st.columns(2)
-                c_a.metric("Drywall Units", f"{int(sheets)}", f"${cost_drywall:.0f}")
-                c_b.metric("Paint / Gal", f"{paint:.1f}", f"${cost_paint:.0f}")
-                st.divider()
-                st.markdown(f"<h3 style='text-align: center; color: #00d26a;'>Total Estimate: ${cost_drywall + cost_paint:.2f}</h3>", unsafe_allow_html=True)
-
-                df = pd.DataFrame({
-                    "Item": ["Wall Length (ft)", "Drywall Sheets", "Paint Gallons", "ESTIMATED COST"],
-                    "Quantity": [total_feet, sheets, paint, 1],
-                    "Cost": ["-", f"${cost_drywall:.2f}", f"${cost_paint:.2f}", f"${cost_drywall + cost_paint:.2f}"]
-                })
-                buffer = io.BytesIO()
-                with pd.ExcelWriter(buffer, engine='openpyxl') as writer: df.to_excel(writer, index=False)
-                st.download_button("📥 Export Mission Data (XLSX)", data=buffer, file_name="SnapTakeoff_Mission_Quote.xlsx", mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", use_container_width=True)
+if __name__ == '__main__':
+    app.run(debug=True)
