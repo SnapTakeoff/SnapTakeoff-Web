@@ -89,5 +89,10 @@ def download_report():
     
     return send_file(output, download_name="SnapTakeoff_Quote.xlsx", as_attachment=True)
 
+# --- NEW: FAVICON ROUTE ---
+@app.route('/favicon.ico')
+def favicon():
+    return send_file('favicon.png', mimetype='image/png')
+
 if __name__ == '__main__':
     app.run(debug=True)
