@@ -23,7 +23,6 @@
 
         .main-content { flex-grow: 1; padding: 60px; overflow-y: auto; }
         
-        /* Box Shadow updated to match new Gold RGBA */
         .box { background-color: #161b22; border: 1px solid #FFC107; box-shadow: 0 0 20px rgba(255, 193, 7, 0.15); border-radius: 12px; padding: 40px; color: white; max-width: 800px; margin-bottom: 30px; }
         
         h1 { color: #0a0e17; margin-top: 0; font-size: 3rem; }
@@ -35,8 +34,44 @@
         input[type=range] { width: 100%; cursor: pointer; accent-color: #FFC107; } 
         input[type=number] { background-color: #0d1117; border: 1px solid #30363d; color: #FFC107; padding: 5px; border-radius: 5px; font-family: monospace; font-weight: bold; text-align: center; } 
         
-        .btn-upload { background-color: transparent; color: #FFC107; border: 2px solid #FFC107; padding: 12px 24px; border-radius: 6px; font-weight: bold; font-size: 16px; cursor: pointer; width: 100%; margin-top: 20px; transition: 0.3s;}
-        .btn-upload:hover { background-color: #FFC107; color: #0a0e17; }
+        /* --- NEW: CUSTOM FILE UPLOAD STYLES --- */
+        /* Hide the ugly default browser input */
+        input[type="file"] { display: none; }
+
+        /* Style the label to look like a cool yellow button */
+        .custom-file-upload {
+            border: 2px dashed #FFC107; /* Dashed border for "drop zone" feel */
+            color: #FFC107;
+            background-color: rgba(255, 193, 7, 0.05); /* Slight tint */
+            padding: 15px;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: 14px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            transition: 0.3s;
+            width: 100%;
+            box-sizing: border-box; /* Ensures padding doesn't affect width */
+        }
+        .custom-file-upload:hover {
+            background-color: rgba(255, 193, 7, 0.15); /* Brighter tint on hover */
+            border-style: solid; /* Solid border on hover */
+        }
+        .file-name-display {
+            display: block;
+            text-align: center;
+            margin-top: 10px;
+            font-size: 13px;
+            color: #8b949e;
+            font-family: monospace;
+        }
+
+        /* Main Action Buttons */
+        .btn-upload { background-color: #FFC107; color: #0a0e17; border: none; padding: 15px; border-radius: 6px; font-weight: 800; font-size: 16px; cursor: pointer; width: 100%; margin-top: 20px; transition: 0.3s;}
+        .btn-upload:hover { background-color: #ffb300; box-shadow: 0 0 15px rgba(255, 193, 7, 0.3); }
 
         .results-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 20px; margin-top: 20px; }
         .metric-box { background: #0d1117; padding: 20px; border-radius: 8px; border: 1px solid #30363d; text-align: center; margin-bottom: 10px; }
@@ -50,32 +85,44 @@
             width: 100%; border-radius: 8px; font-weight: 800; cursor: pointer; margin-top: 20px;
             font-size: 16px; display: flex; align-items: center; justify-content: center; gap: 10px;
         }
-        .btn-pay:hover { background-color: #ffb300; } /* Slightly darker on hover */
+        .btn-pay:hover { background-color: #ffb300; }
     </style>
     
     <script>
         function syncInputs(sourceId, targetId) { document.getElementById(targetId).value = document.getElementById(sourceId).value; }
         
-        // --- PAYMENT LOGIC (PAY PER USE) ---
+        // --- NEW: UPDATE FILE NAME DISPLAY ---
+        function updateFileName(input) {
+            const fileNameDisplay = document.getElementById('file-name-text');
+            if (input.files && input.files.length > 0) {
+                // Show filename and change color to yellow to indicate success
+                fileNameDisplay.innerText = "📄 " + input.files[0].name;
+                fileNameDisplay.style.color = '#FFC107';
+            } else {
+                fileNameDisplay.innerText = "No file chosen yet.";
+                fileNameDisplay.style.color = '#8b949e';
+            }
+        }
+
+        // --- PAYMENT LOGIC ---
         function startPayment() {
             var options = {
                 // ⚠️ REPLACE WITH YOUR ACTUAL RAZORPAY KEY ID
                 "key": "rzp_test_YOUR_KEY_HERE", 
                 
-                "amount": "19900", // 19900 paise = ₹199
+                "amount": "19900", 
                 "currency": "INR",
                 "name": "SnapTakeoff Pro",
                 "description": "Unlock Excel Estimate",
                 "image": "/favicon.ico",
                 "handler": function (response){
-                    // Payment Success: Submit the form to download
                     document.getElementById('download_form').submit();
                 },
-                "theme": { "color": "#FFC107" } // Updated Razorpay Popup to Warm Gold
+                "theme": { "color": "#FFC107" } 
             };
             var rzp1 = new Razorpay(options);
             rzp1.open();
-            return false; // Prevent form from submitting before payment
+            return false;
         }
 
         function recalc() {
@@ -95,7 +142,6 @@
                 document.getElementById('display_feet').innerText = totalFeet.toFixed(2) + " ft";
                 document.getElementById('display_cost').innerText = "$" + totalCost.toFixed(2);
                 
-                // Update hidden inputs for the download logic
                 document.getElementById('hidden_feet').value = totalFeet.toFixed(2);
                 document.getElementById('hidden_cost').value = totalCost.toFixed(2);
                 document.getElementById('hidden_sheets').value = sheets;
@@ -138,7 +184,15 @@
                         </div>
                     </div>
                     <hr style="border-color: #30363d; margin: 20px 0;">
-                    <input type="file" name="file" required style="color: #c9d1d9;">
+                    
+                    <div style="margin-bottom: 20px;">
+                        <label for="file-upload" class="custom-file-upload">
+                           📂 CLICK TO SELECT BLUEPRINT
+                        </label>
+                        <input id="file-upload" type="file" name="file" required onchange="updateFileName(this)">
+                        <span id="file-name-text" class="file-name-display">No file chosen yet.</span>
+                    </div>
+
                     <button type="submit" class="btn-upload">INITIATE SCAN</button>
                 </form>
             </div>
