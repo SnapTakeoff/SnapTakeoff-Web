@@ -34,15 +34,12 @@
         input[type=range] { width: 100%; cursor: pointer; accent-color: #FFC107; } 
         input[type=number] { background-color: #0d1117; border: 1px solid #30363d; color: #FFC107; padding: 5px; border-radius: 5px; font-family: monospace; font-weight: bold; text-align: center; } 
         
-        /* --- NEW: CUSTOM FILE UPLOAD STYLES --- */
-        /* Hide the ugly default browser input */
+        /* CUSTOM FILE UPLOAD STYLES */
         input[type="file"] { display: none; }
-
-        /* Style the label to look like a cool yellow button */
         .custom-file-upload {
-            border: 2px dashed #FFC107; /* Dashed border for "drop zone" feel */
+            border: 2px dashed #FFC107; 
             color: #FFC107;
-            background-color: rgba(255, 193, 7, 0.05); /* Slight tint */
+            background-color: rgba(255, 193, 7, 0.05); 
             padding: 15px;
             border-radius: 8px;
             font-weight: bold;
@@ -54,22 +51,11 @@
             gap: 10px;
             transition: 0.3s;
             width: 100%;
-            box-sizing: border-box; /* Ensures padding doesn't affect width */
+            box-sizing: border-box; 
         }
-        .custom-file-upload:hover {
-            background-color: rgba(255, 193, 7, 0.15); /* Brighter tint on hover */
-            border-style: solid; /* Solid border on hover */
-        }
-        .file-name-display {
-            display: block;
-            text-align: center;
-            margin-top: 10px;
-            font-size: 13px;
-            color: #8b949e;
-            font-family: monospace;
-        }
+        .custom-file-upload:hover { background-color: rgba(255, 193, 7, 0.15); border-style: solid; }
+        .file-name-display { display: block; text-align: center; margin-top: 10px; font-size: 13px; color: #8b949e; font-family: monospace; }
 
-        /* Main Action Buttons */
         .btn-upload { background-color: #FFC107; color: #0a0e17; border: none; padding: 15px; border-radius: 6px; font-weight: 800; font-size: 16px; cursor: pointer; width: 100%; margin-top: 20px; transition: 0.3s;}
         .btn-upload:hover { background-color: #ffb300; box-shadow: 0 0 15px rgba(255, 193, 7, 0.3); }
 
@@ -79,23 +65,32 @@
         .metric-label { font-size: 12px; color: #8b949e; margin-top: 5px; }
         .calib-input { width: 80px; font-size: 18px; padding: 8px; border-color: #FFC107; color: #FFC107; }
 
-        /* PAY BUTTON STYLE */
+        /* BUTTONS */
         .btn-pay {
             background-color: #FFC107; color: #0a0e17; border: none; padding: 15px;
-            width: 100%; border-radius: 8px; font-weight: 800; cursor: pointer; margin-top: 20px;
+            width: 100%; border-radius: 8px; font-weight: 800; cursor: pointer; margin-top: 10px;
             font-size: 16px; display: flex; align-items: center; justify-content: center; gap: 10px;
         }
         .btn-pay:hover { background-color: #ffb300; }
+
+        /* NEW FREE TRIAL BUTTON STYLE */
+        .btn-free {
+            background-color: transparent; color: #FFC107; border: 2px solid #FFC107; padding: 15px;
+            width: 100%; border-radius: 8px; font-weight: 800; cursor: pointer; margin-top: 20px;
+            font-size: 16px; display: flex; align-items: center; justify-content: center; gap: 10px;
+            transition: 0.3s;
+        }
+        .btn-free:hover { background-color: #FFC107; color: #0a0e17; }
+        
+        .hidden { display: none !important; }
     </style>
     
     <script>
         function syncInputs(sourceId, targetId) { document.getElementById(targetId).value = document.getElementById(sourceId).value; }
         
-        // --- NEW: UPDATE FILE NAME DISPLAY ---
         function updateFileName(input) {
             const fileNameDisplay = document.getElementById('file-name-text');
             if (input.files && input.files.length > 0) {
-                // Show filename and change color to yellow to indicate success
                 fileNameDisplay.innerText = "📄 " + input.files[0].name;
                 fileNameDisplay.style.color = '#FFC107';
             } else {
@@ -104,11 +99,34 @@
             }
         }
 
+        // --- NEW: FREE TRIAL LOGIC ---
+        function checkFreeTrial() {
+            // Check browser memory for 'trial_used' flag
+            const used = localStorage.getItem('snaptakeoff_trial_used');
+            if (used) {
+                // If used, hide the free button
+                if(document.getElementById('btn-free')) {
+                    document.getElementById('btn-free').classList.add('hidden');
+                }
+            }
+        }
+
+        function useFreeTrial() {
+            if(confirm("🎁 Use your 1-time FREE UNLOCK now?")) {
+                // 1. Mark as used in memory
+                localStorage.setItem('snaptakeoff_trial_used', 'true');
+                // 2. Hide button immediately
+                document.getElementById('btn-free').classList.add('hidden');
+                // 3. Submit form (bypass payment)
+                document.getElementById('download_form').submit();
+            }
+        }
+
         // --- PAYMENT LOGIC ---
         function startPayment() {
             var options = {
                 // ⚠️ REPLACE WITH YOUR ACTUAL RAZORPAY KEY ID
-                "key": "rzp_test_YOUR_KEY_HERE", 
+                "key": "rzp_test_S22PNTxAX2pUh7", 
                 
                 "amount": "19900", 
                 "currency": "INR",
@@ -146,11 +164,14 @@
                 document.getElementById('hidden_cost').value = totalCost.toFixed(2);
                 document.getElementById('hidden_sheets').value = sheets;
                 document.getElementById('hidden_paint').value = paint;
+                
+                // Check trial status every time results load
+                checkFreeTrial();
             } catch(e) {}
         }
     </script>
 </head>
-<body>
+<body onload="checkFreeTrial()">
 
     <div class="sidebar">
         <div class="logo">Snap<span class="highlight">Takeoff</span></div>
@@ -186,9 +207,7 @@
                     <hr style="border-color: #30363d; margin: 20px 0;">
                     
                     <div style="margin-bottom: 20px;">
-                        <label for="file-upload" class="custom-file-upload">
-                           📂 CLICK TO SELECT BLUEPRINT
-                        </label>
+                        <label for="file-upload" class="custom-file-upload">📂 CLICK TO SELECT BLUEPRINT</label>
                         <input id="file-upload" type="file" name="file" required onchange="updateFileName(this)">
                         <span id="file-name-text" class="file-name-display">No file chosen yet.</span>
                     </div>
@@ -222,6 +241,10 @@
                             <input type="hidden" name="final_sheets" id="hidden_sheets">
                             <input type="hidden" name="final_paint" id="hidden_paint">
                             
+                            <button type="button" id="btn-free" onclick="useFreeTrial()" class="btn-free">
+                                🎁 UNLOCK FOR FREE (1 TIME ONLY)
+                            </button>
+
                             <button type="button" onclick="startPayment()" class="btn-pay">
                                 🔒 UNLOCK & DOWNLOAD (₹199)
                             </button>
