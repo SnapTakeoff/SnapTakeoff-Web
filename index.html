@@ -8,39 +8,184 @@
     <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 
     <style>
-        /* CORE STYLES - WARM GOLD THEME */
-        body { background-color: #e8eaf6; font-family: 'Helvetica Neue', sans-serif; margin: 0; display: flex; height: 100vh; }
-        .sidebar { width: 300px; background-color: #0a0e17; color: #c9d1d9; padding: 30px; display: flex; flex-direction: column; border-right: 1px solid #1f2937; }
-        .logo { font-size: 32px; font-weight: 800; color: white; margin-bottom: 5px; line-height: 1; }
-        
-        /* THEME COLOR: Warm Gold (#FFC107) */
-        .highlight { color: #FFC107; } 
-        .sub-logo { font-size: 12px; color: #8b949e; margin-bottom: 50px; letter-spacing: 1px; }
-        
-        .menu-item { padding: 15px 0; border-bottom: 1px solid #21262d; cursor: pointer; font-size: 16px; font-weight: 500; text-decoration: none; color: #c9d1d9; display: block; }
-        .menu-item:hover { color: #FFC107; padding-left: 10px; } 
-        .active { color: white; border-right: 3px solid #FFC107; } 
+        /* --- CORE STYLES --- */
+        body { 
+            background-color: #f9fafb; 
+            font-family: 'Helvetica Neue', sans-serif; 
+            margin: 0; 
+            color: #1f2937; 
+        }
 
-        .main-content { flex-grow: 1; padding: 60px; overflow-y: auto; }
-        
-        .box { background-color: #161b22; border: 1px solid #FFC107; box-shadow: 0 0 20px rgba(255, 193, 7, 0.15); border-radius: 12px; padding: 40px; color: white; max-width: 800px; margin-bottom: 30px; }
-        
-        h1 { color: #0a0e17; margin-top: 0; font-size: 3rem; }
-        h2 { color: #FFC107; font-family: 'Courier New', monospace; margin-top: 0; }
-        
+        .highlight { color: #FFC107; } 
+
+        /* --- NAVIGATION --- */
+        .navbar {
+            display: flex;
+            align-items: center;
+            justify-content: flex-start; 
+            padding: 20px 40px;
+            background-color: #0a0e17; 
+            border-bottom: 1px solid #1f2937;
+        }
+        .logo { font-size: 24px; font-weight: 800; color: white; text-decoration: none; }
+
+        /* --- HERO BAND --- */
+        .hero-band {
+            background-color: #0a0e17; 
+            text-align: center;
+            padding: 80px 20px;
+            width: 100%;
+            border-bottom: 4px solid #FFC107;
+        }
+        .hero-band h1 {
+            font-size: 3.5rem;
+            color: white; 
+            margin-bottom: 20px;
+            line-height: 1.2;
+            margin-top: 0;
+        }
+        .hero-band p {
+            font-size: 1.2rem;
+            color: #c9d1d9; 
+            max-width: 600px;
+            margin: 0 auto 40px auto;
+        }
+        .btn-cta {
+            background-color: #FFC107;
+            color: #0a0e17;
+            padding: 18px 40px;
+            font-size: 18px;
+            font-weight: 800;
+            border-radius: 50px;
+            text-decoration: none;
+            display: inline-block;
+            transition: 0.3s;
+            box-shadow: 0 4px 15px rgba(255, 193, 7, 0.4);
+        }
+        .btn-cta:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 25px rgba(255, 193, 7, 0.6);
+            background-color: #ffb300;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 60px 20px;
+        }
+
+        /* --- FEATURES GRID --- */
+        .features {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 30px;
+            margin-top: 40px;
+            margin-bottom: 60px;
+        }
+        .feature-card {
+            background: #ffffff; 
+            padding: 30px;
+            border-radius: 12px;
+            border: 1px solid #e5e7eb; 
+            text-align: center;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); 
+        }
+        .feature-icon { font-size: 40px; margin-bottom: 20px; display: block; }
+        .feature-title { font-size: 18px; color: #1f2937; font-weight: bold; margin-bottom: 10px; } 
+        .feature-desc { font-size: 14px; color: #6b7280; line-height: 1.6; } 
+
+        /* --- FAQ SECTION --- */
+        .faq-section { margin-top: 60px; }
+        .faq-section h2 { text-align: center; font-size: 2rem; margin-bottom: 40px; color: #1f2937; }
+        .faq-item {
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+        }
+        .faq-q { font-weight: bold; font-size: 18px; color: #1f2937; margin-bottom: 10px; display: flex; align-items: center; gap: 10px;}
+        .faq-a { color: #6b7280; line-height: 1.5; font-size: 15px; margin-left: 28px; }
+
+        /* --- TOOL PAGE INFO SECTION --- */
+        .info-section { margin-bottom: 30px; }
+        .info-section h2 {
+            text-align: left; 
+            color: #1f2937;
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+            margin-top: 0;
+            border-bottom: 2px solid #FFC107;
+            display: inline-block;
+            padding-bottom: 5px;
+        }
+        .info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+        .info-card {
+            background: #ffffff;
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 4px solid #FFC107;
+            border-top: 1px solid #e5e7eb;
+            border-right: 1px solid #e5e7eb;
+            border-bottom: 1px solid #e5e7eb;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+        .info-head { font-size: 15px; font-weight: bold; color: #1f2937; margin-bottom: 5px; display: flex; align-items: center; gap: 8px; }
+        .info-body { font-size: 13px; color: #6b7280; line-height: 1.4; }
+
+        /* --- BOX STYLES --- */
+        .box-dark {
+            background-color: #161b22; 
+            border: 1px solid #FFC107; 
+            box-shadow: 0 0 20px rgba(255, 193, 7, 0.15); 
+            border-radius: 12px; 
+            padding: 40px; 
+            color: white; 
+            margin-bottom: 30px;
+        }
+        .box-dark h2 { color: #FFC107; font-family: 'Courier New', monospace; margin-top: 0; }
+        .box-dark .slider-label { color: #8b949e; }
+        .box-dark input[type=number], .box-dark select { 
+            background-color: #0d1117; 
+            border: 1px solid #30363d; 
+            color: #FFC107; 
+        }
+        .box-dark .custom-file-upload {
+            background-color: rgba(255, 193, 7, 0.05); 
+            color: #FFC107; 
+            border: 2px dashed #FFC107;
+        }
+        .box-dark .custom-file-upload:hover { background-color: rgba(255, 193, 7, 0.15); }
+        .box-dark .file-name-display { color: #8b949e; }
+        .box-dark hr { border-color: #30363d; }
+        .box-dark img { border: 1px solid #30363d !important; }
+
+        .box-dark .metric-box {
+            background: #0d1117;
+            border: 1px solid #30363d;
+        }
+        .box-dark .metric-label { color: #8b949e; }
+        .box-dark .calib-input {
+            background-color: #0d1117; 
+            color: #FFC107; 
+            border-color: #30363d;
+        }
+
+        h1.page-title { color: #1f2937; margin-top: 0; font-size: 3rem; text-align: center; margin-bottom: 30px;}
         .slider-row { display: flex; align-items: center; gap: 15px; }
         .slider-container { flex-grow: 1; margin-bottom: 15px; }
-        .slider-label { display: block; font-size: 14px; color: #8b949e; margin-bottom: 5px; }
-        input[type=range] { width: 100%; cursor: pointer; accent-color: #FFC107; } 
-        input[type=number] { background-color: #0d1117; border: 1px solid #30363d; color: #FFC107; padding: 5px; border-radius: 5px; font-family: monospace; font-weight: bold; text-align: center; } 
+        .slider-label { display: block; font-size: 14px; margin-bottom: 5px; }
         
-        /* CUSTOM FILE UPLOAD STYLES */
+        input[type=range] { width: 100%; cursor: pointer; accent-color: #FFC107; } 
         input[type="file"] { display: none; }
+        
         .custom-file-upload {
-            border: 2px dashed #FFC107; 
-            color: #FFC107;
-            background-color: rgba(255, 193, 7, 0.05); 
-            padding: 15px;
+            padding: 20px;
             border-radius: 8px;
             font-weight: bold;
             font-size: 14px;
@@ -53,36 +198,34 @@
             width: 100%;
             box-sizing: border-box; 
         }
-        .custom-file-upload:hover { background-color: rgba(255, 193, 7, 0.15); border-style: solid; }
-        .file-name-display { display: block; text-align: center; margin-top: 10px; font-size: 13px; color: #8b949e; font-family: monospace; }
+        .file-name-display { display: block; text-align: center; margin-top: 10px; font-size: 13px; font-family: monospace; }
 
         .btn-upload { background-color: #FFC107; color: #0a0e17; border: none; padding: 15px; border-radius: 6px; font-weight: 800; font-size: 16px; cursor: pointer; width: 100%; margin-top: 20px; transition: 0.3s;}
-        .btn-upload:hover { background-color: #ffb300; box-shadow: 0 0 15px rgba(255, 193, 7, 0.3); }
+        .btn-upload:hover { background-color: #ffb300; box-shadow: 0 4px 15px rgba(255, 193, 7, 0.3); }
 
         .results-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 20px; margin-top: 20px; }
-        .metric-box { background: #0d1117; padding: 20px; border-radius: 8px; border: 1px solid #30363d; text-align: center; margin-bottom: 10px; }
+        .metric-box { padding: 20px; border-radius: 8px; text-align: center; margin-bottom: 10px; }
         .metric-val { font-size: 24px; color: #FFC107; font-family: monospace; font-weight: bold; } 
-        .metric-label { font-size: 12px; color: #8b949e; margin-top: 5px; }
-        .calib-input { width: 80px; font-size: 18px; padding: 8px; border-color: #FFC107; color: #FFC107; }
+        .calib-input { width: 80px; font-size: 18px; padding: 8px; text-align: center; font-weight: bold; border-radius: 5px; border-style: solid; border-width: 1px; }
 
-        /* BUTTONS */
         .btn-pay {
             background-color: #FFC107; color: #0a0e17; border: none; padding: 15px;
             width: 100%; border-radius: 8px; font-weight: 800; cursor: pointer; margin-top: 10px;
             font-size: 16px; display: flex; align-items: center; justify-content: center; gap: 10px;
         }
         .btn-pay:hover { background-color: #ffb300; }
-
-        /* NEW FREE TRIAL BUTTON STYLE */
+        
         .btn-free {
-            background-color: transparent; color: #FFC107; border: 2px solid #FFC107; padding: 15px;
+            background-color: transparent; color: #b48a00; border: 2px solid #FFC107; padding: 15px;
             width: 100%; border-radius: 8px; font-weight: 800; cursor: pointer; margin-top: 20px;
             font-size: 16px; display: flex; align-items: center; justify-content: center; gap: 10px;
             transition: 0.3s;
         }
         .btn-free:hover { background-color: #FFC107; color: #0a0e17; }
-        
         .hidden { display: none !important; }
+
+        .footer { text-align: center; margin-top: 80px; padding: 40px 0; border-top: 1px solid #e5e7eb; color: #6b7280; font-size: 14px; }
+        .footer a { color: #FFC107; text-decoration: none; font-weight: bold;}
     </style>
     
     <script>
@@ -92,41 +235,31 @@
             const fileNameDisplay = document.getElementById('file-name-text');
             if (input.files && input.files.length > 0) {
                 fileNameDisplay.innerText = "📄 " + input.files[0].name;
-                fileNameDisplay.style.color = '#FFC107';
+                fileNameDisplay.style.color = '#FFC107'; 
             } else {
                 fileNameDisplay.innerText = "No file chosen yet.";
-                fileNameDisplay.style.color = '#8b949e';
             }
         }
 
-        // --- NEW: FREE TRIAL LOGIC ---
         function checkFreeTrial() {
-            // Check browser memory for 'trial_used' flag
             const used = localStorage.getItem('snaptakeoff_trial_used');
-            if (used) {
-                // If used, hide the free button
-                if(document.getElementById('btn-free')) {
-                    document.getElementById('btn-free').classList.add('hidden');
-                }
+            if (used && document.getElementById('btn-free')) {
+                document.getElementById('btn-free').classList.add('hidden');
             }
         }
 
         function useFreeTrial() {
             if(confirm("🎁 Use your 1-time FREE UNLOCK now?")) {
-                // 1. Mark as used in memory
                 localStorage.setItem('snaptakeoff_trial_used', 'true');
-                // 2. Hide button immediately
                 document.getElementById('btn-free').classList.add('hidden');
-                // 3. Submit form (bypass payment)
                 document.getElementById('download_form').submit();
             }
         }
 
-        // --- PAYMENT LOGIC ---
         function startPayment() {
             var options = {
-                // ⚠️ REPLACE WITH YOUR ACTUAL RAZORPAY KEY ID
-                "key": "rzp_test_S22PNTxAX2pUh7", 
+                // ⚠️ REPLACE WITH YOUR ACTUAL RAZORPAY KEY ID HERE
+                "key": "rzp_test_YOUR_KEY_HERE", 
                 
                 "amount": "19900", 
                 "currency": "INR",
@@ -147,25 +280,42 @@
             try {
                 const rawPixels = parseFloat(document.getElementById('raw_pixels_store').value);
                 const rawWidth = parseFloat(document.getElementById('raw_width_store').value);
+                
+                // 1. Get Calibration & Custom Prices
                 let realFt = parseFloat(document.getElementById('real_width_input').value);
                 if (!realFt || realFt <= 0) realFt = 1;
+
+                let pricePerSheet = parseFloat(document.getElementById('cost_sheet').value) || 15;
+                let pricePerPaint = parseFloat(document.getElementById('cost_paint').value) || 40;
+                
+                // 2. Get Currency Symbol
+                let currencySym = document.getElementById('currency_select').value;
+
+                // 3. Math
                 const scale = rawWidth / realFt; 
                 const totalFeet = rawPixels / scale;
                 const sheets = (totalFeet * 8) / 32;
-                const costDrywall = sheets * 15;
+                
+                const costDrywall = sheets * pricePerSheet;
                 const paint = (totalFeet * 8) / 400;
-                const costPaint = paint * 40;
+                const costPaint = paint * pricePerPaint;
                 const totalCost = costDrywall + costPaint;
                 
+                // 4. Update Display
                 document.getElementById('display_feet').innerText = totalFeet.toFixed(2) + " ft";
-                document.getElementById('display_cost').innerText = "$" + totalCost.toFixed(2);
+                document.getElementById('display_cost').innerText = currencySym + totalCost.toFixed(2);
                 
+                // 5. Update Hidden Inputs (Send to Python)
                 document.getElementById('hidden_feet').value = totalFeet.toFixed(2);
                 document.getElementById('hidden_cost').value = totalCost.toFixed(2);
                 document.getElementById('hidden_sheets').value = sheets;
                 document.getElementById('hidden_paint').value = paint;
                 
-                // Check trial status every time results load
+                // NEW: Send Currency & Prices to Python
+                document.getElementById('hidden_currency').value = currencySym;
+                document.getElementById('hidden_unit_sheet').value = pricePerSheet;
+                document.getElementById('hidden_unit_paint').value = pricePerPaint;
+                
                 checkFreeTrial();
             } catch(e) {}
         }
@@ -173,25 +323,94 @@
 </head>
 <body onload="checkFreeTrial()">
 
-    <div class="sidebar">
-        <div class="logo">Snap<span class="highlight">Takeoff</span></div>
-        <div class="sub-logo">AI ESTIMATOR PROTOCOL</div>
-        <a href="/" class="menu-item {% if page == 'home' %}active{% endif %}">Home</a>
-        <a href="/tool" class="menu-item {% if page == 'tool' %}active{% endif %}">Upload Blueprint</a>
+    <div class="navbar">
+        <a href="/" class="logo">Snap<span class="highlight">Takeoff</span></a>
     </div>
 
-    <div class="main-content">
-        {% if page == 'home' %}
-            <h1>Welcome.</h1>
-            <div class="box" style="border-color: #FFC107; box-shadow: none;">
-                <h2>// SYSTEM OVERVIEW</h2>
-                <p style="color: #c9d1d9;">Navigate to <strong>Upload Blueprint</strong> to begin.</p>
-            </div>
-        {% endif %}
+    {% if page == 'home' %}
+        <div class="hero-band">
+            <h1>AI Estimation for<br><span class="highlight">Modern Contractors</span></h1>
+            <p>Upload your blueprint. Get instant material takeoffs and cost estimates. No complex software required.</p>
+            <a href="/tool" class="btn-cta">GET STARTED</a>
+        </div>
 
-        {% if page == 'tool' %}
-            <h1>Upload Blueprint.</h1>
-            <div class="box">
+        <div class="container">
+            <div class="features">
+                <div class="feature-card">
+                    <span class="feature-icon">📂</span>
+                    <div class="feature-title">1. Upload Blueprint</div>
+                    <div class="feature-desc">Simply upload an image of your floor plan (JPG or PNG). No CAD files needed.</div>
+                </div>
+                <div class="feature-card">
+                    <span class="feature-icon">🤖</span>
+                    <div class="feature-title">2. AI Analysis</div>
+                    <div class="feature-desc">Our intelligent sensor detects walls and calculates linear footage automatically.</div>
+                </div>
+                <div class="feature-card">
+                    <span class="feature-icon">📊</span>
+                    <div class="feature-title">3. Instant Excel</div>
+                    <div class="feature-desc">Download a professional cost estimate and material list in seconds.</div>
+                </div>
+            </div>
+
+            <div class="faq-section">
+                <h2>Frequently Asked Questions</h2>
+                <div class="faq-item">
+                    <div class="faq-q"><span class="highlight">?</span> How accurate is the estimation?</div>
+                    <div class="faq-a">The accuracy depends on the image clarity and your calibration. If you set the "Real World Width" correctly, SnapTakeoff is typically accurate within 95-98% for linear footage.</div>
+                </div>
+                <div class="faq-item">
+                    <div class="faq-q"><span class="highlight">?</span> What file formats do you accept?</div>
+                    <div class="faq-a">We accept standard image files like .JPG, .JPEG, and .PNG. If you have a PDF, please take a screenshot of the page you want to estimate and upload that.</div>
+                </div>
+                <div class="faq-item">
+                    <div class="faq-q"><span class="highlight">?</span> Is my payment information secure?</div>
+                    <div class="faq-a">Yes. We use Razorpay, a banking-grade payment processor. We do not store your card details on our servers.</div>
+                </div>
+                <div class="faq-item">
+                    <div class="faq-q"><span class="highlight">?</span> Can I customize material prices?</div>
+                    <div class="faq-a">Absolutely. After scanning, you can enter your own local prices for Drywall Sheets and Paint to get an exact quote for your specific job.</div>
+                </div>
+            </div>
+
+            <div class="footer">
+                <p>Have questions? Email us at <a href="mailto:filehangar2025@gmail.com">filehangar2025@gmail.com</a></p>
+                <p style="opacity: 0.7; margin-top: 10px;">&copy; 2024 SnapTakeoff Inc.</p>
+            </div>
+        </div>
+    {% endif %}
+
+    {% if page == 'tool' %}
+        <div class="container">
+            <h1 class="page-title">Upload Blueprint.</h1>
+
+            <div class="info-section">
+                <h2>Controls Guide</h2>
+                <div class="info-grid">
+                    <div class="info-card">
+                        <div class="info-head"><span class="highlight">⚡</span> Sensitivity</div>
+                        <div class="info-body">Lower = More sensitive (detects faint lines). Higher = Less sensitive (bold lines only).</div>
+                    </div>
+                    <div class="info-card">
+                        <div class="info-head"><span class="highlight">🌉</span> Gap Fill</div>
+                        <div class="info-body">Connects broken lines. Increase this to jump gaps like doorways.</div>
+                    </div>
+                    <div class="info-card">
+                        <div class="info-head"><span class="highlight">🧹</span> Min Wall Length</div>
+                        <div class="info-body">Noise filter. Ignores small specks, text, or furniture.</div>
+                    </div>
+                    <div class="info-card">
+                        <div class="info-head"><span class="highlight">📏</span> Wall Thickness</div>
+                        <div class="info-body">Visual only. Makes the red lines thicker for easier viewing.</div>
+                    </div>
+                    <div class="info-card" style="grid-column: 1 / -1;">
+                        <div class="info-head"><span class="highlight">🎯</span> Real World Width (Important)</div>
+                        <div class="info-body">After scanning, enter the total width of the image in Feet. The AI uses this to calculate cost.</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="box-dark">
                 <h2>// SENSOR CONFIGURATION</h2>
                 <form action="/tool" method="post" enctype="multipart/form-data">
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px;">
@@ -204,7 +423,7 @@
                             <div class="slider-container"><label class="slider-label">Wall Thickness</label><div class="slider-row"><input type="range" id="range_thick" name="thick" min="1" max="10" value="{{ params.thick }}" oninput="syncInputs('range_thick', 'num_thick')"><input type="number" id="num_thick" min="1" max="10" value="{{ params.thick }}" oninput="syncInputs('num_thick', 'range_thick')"></div></div>
                         </div>
                     </div>
-                    <hr style="border-color: #30363d; margin: 20px 0;">
+                    <hr>
                     
                     <div style="margin-bottom: 20px;">
                         <label for="file-upload" class="custom-file-upload">📂 CLICK TO SELECT BLUEPRINT</label>
@@ -220,16 +439,41 @@
             <input type="hidden" id="raw_pixels_store" value="{{ raw_pixels }}">
             <input type="hidden" id="raw_width_store" value="{{ raw_width }}">
 
-            <div class="box" style="border-color: #FFC107;">
+            <div class="box-dark">
                 <h2 style="color: #FFC107;">// ANALYSIS COMPLETE</h2>
                 <div class="results-grid">
                     <div>
-                        <img src="data:image/jpeg;base64,{{ image_data }}" style="width: 100%; border-radius: 8px; border: 1px solid #30363d;">
+                        <img src="data:image/jpeg;base64,{{ image_data }}" style="width: 100%; border-radius: 8px;">
                     </div>
                     <div>
-                        <div class="metric-box" style="border-color: #FFC107;">
-                            <div class="metric-label" style="color: #FFC107;">REAL WORLD WIDTH (FT)</div>
+                        <div class="metric-box">
+                            <div class="metric-label" style="color: #FFC107; font-weight:bold;">REAL WORLD WIDTH (FT)</div>
                             <input type="number" id="real_width_input" class="calib-input" value="50" oninput="recalc()">
+                        </div>
+
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px;">
+                            <div class="metric-box">
+                                <div class="metric-label">COST/SHEET</div>
+                                <input type="number" id="cost_sheet" class="calib-input" value="15" oninput="recalc()">
+                            </div>
+                            <div class="metric-box">
+                                <div class="metric-label">COST/PAINT</div>
+                                <input type="number" id="cost_paint" class="calib-input" value="40" oninput="recalc()">
+                            </div>
+                        </div>
+
+                        <div class="metric-box" style="margin-bottom: 10px;">
+                            <div class="metric-label">CURRENCY</div>
+                            <select id="currency_select" class="calib-input" style="width: 100%;" onchange="recalc()">
+                                <option value="$">USD ($)</option>
+                                <option value="₹">INR (₹)</option>
+                                <option value="€">EUR (€)</option>
+                                <option value="£">GBP (£)</option>
+                                <option value="SAR ">SAR (﷼)</option>
+                                <option value="AED ">AED (د.إ)</option>
+                                <option value="C$">CAD (C$)</option>
+                                <option value="A$">AUD (A$)</option>
+                            </select>
                         </div>
 
                         <div class="metric-box"><div class="metric-val" id="display_feet">---</div><div class="metric-label">TOTAL LINEAR FEET</div></div>
@@ -240,6 +484,10 @@
                             <input type="hidden" name="final_cost" id="hidden_cost">
                             <input type="hidden" name="final_sheets" id="hidden_sheets">
                             <input type="hidden" name="final_paint" id="hidden_paint">
+                            
+                            <input type="hidden" name="currency_symbol" id="hidden_currency">
+                            <input type="hidden" name="unit_price_sheet" id="hidden_unit_sheet">
+                            <input type="hidden" name="unit_price_paint" id="hidden_unit_paint">
                             
                             <button type="button" id="btn-free" onclick="useFreeTrial()" class="btn-free">
                                 🎁 UNLOCK FOR FREE (1 TIME ONLY)
@@ -255,7 +503,7 @@
             </div>
             <script>recalc();</script>
             {% endif %}
-        {% endif %}
-    </div>
+        </div>
+    {% endif %}
 </body>
 </html>

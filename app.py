@@ -72,14 +72,21 @@ def download_report():
         cost = float(request.form.get('final_cost'))
         sheets = float(request.form.get('final_sheets'))
         paint = float(request.form.get('final_paint'))
+        
+        # Get Currency & Prices (Defaults if missing)
+        currency_sym = request.form.get('currency_symbol', '$')
+        unit_sheet = float(request.form.get('unit_price_sheet', 15))
+        unit_paint = float(request.form.get('unit_price_paint', 40))
+        
     except:
         return "Error: Data missing."
 
+    # Dynamic Excel Logic
     df = pd.DataFrame({
         "Line Item": ["Total Wall Length", "Drywall Sheets (4x8)", "Paint Gallons", "Labor & Misc", "TOTAL ESTIMATE"],
         "Quantity": [f"{feet:.2f} ft", f"{sheets:.0f} sheets", f"{paint:.1f} gal", "-", "-"],
-        "Unit Cost": ["-", "$15.00", "$40.00", "-", "-"],
-        "Total": ["-", f"${sheets*15:.2f}", f"${paint*40:.2f}", "-", f"${cost:.2f}"]
+        "Unit Cost": ["-", f"{currency_sym}{unit_sheet:.2f}", f"{currency_sym}{unit_paint:.2f}", "-", "-"],
+        "Total": ["-", f"{currency_sym}{sheets*unit_sheet:.2f}", f"{currency_sym}{paint*unit_paint:.2f}", "-", f"{currency_sym}{cost:.2f}"]
     })
 
     output = io.BytesIO()
