@@ -163,7 +163,7 @@
         .box-dark .custom-file-upload:hover { background-color: rgba(255, 193, 7, 0.15); }
         .box-dark .file-name-display { color: #8b949e; }
         .box-dark hr { border-color: #30363d; }
-        .box-dark img { border: 1px solid #30363d !important; }
+        .box-dark canvas { border: 1px solid #30363d; cursor: crosshair; }
 
         .box-dark .metric-box {
             background: #0d1117;
@@ -222,6 +222,16 @@
             transition: 0.3s;
         }
         .btn-free:hover { background-color: #FFC107; color: #0a0e17; }
+        
+        /* New Tools Buttons */
+        .tool-row { display: flex; gap: 10px; margin-top: 10px; }
+        .btn-tool-toggle {
+            background: #0d1117; color: #8b949e; border: 1px solid #30363d; padding: 10px 20px;
+            cursor: pointer; border-radius: 6px; font-weight: bold; width: 100%;
+        }
+        .btn-tool-toggle.active { background: #FFC107; color: #0a0e17; border-color: #FFC107; }
+        .btn-tool-clear { background: #21262d; color: #f85149; border: 1px solid #30363d; }
+
         .hidden { display: none !important; }
 
         .footer { text-align: center; margin-top: 80px; padding: 40px 0; border-top: 1px solid #e5e7eb; color: #6b7280; font-size: 14px; }
@@ -258,9 +268,7 @@
 
         function startPayment() {
             var options = {
-                // ⚠️ REPLACE WITH YOUR ACTUAL RAZORPAY KEY ID HERE
                 "key": "rzp_test_YOUR_KEY_HERE", 
-                
                 "amount": "19900", 
                 "currency": "INR",
                 "name": "SnapTakeoff Pro",
@@ -276,22 +284,158 @@
             return false;
         }
 
+        // --- CANVAS TOOLS LOGIC ---
+        let areaPoints = [];
+        let countPoints = [];
+        let mode = 'none'; // 'none', 'area', 'count'
+        let canvas, ctx, bgImage;
+
+        function initCanvas(imgDataStr) {
+            canvas = document.getElementById('blueprintCanvas');
+            ctx = canvas.getContext('2d');
+            
+            bgImage = new Image();
+            bgImage.onload = function() {
+                canvas.width = bgImage.width;
+                canvas.height = bgImage.height;
+                redrawCanvas();
+            };
+            bgImage.src = "data:image/jpeg;base64," + imgDataStr;
+
+            canvas.addEventListener('mousedown', function(e) {
+                if (mode === 'none') return;
+                
+                const rect = canvas.getBoundingClientRect();
+                const scaleX = canvas.width / rect.width;
+                const scaleY = canvas.height / rect.height;
+
+                const x = (e.clientX - rect.left) * scaleX;
+                const y = (e.clientY - rect.top) * scaleY;
+
+                if (mode === 'area') {
+                    areaPoints.push({x: x, y: y});
+                    calcArea(); // Calc math immediately
+                } else if (mode === 'count') {
+                    countPoints.push({x: x, y: y});
+                    updateCountDisplay(); // Update count immediately
+                }
+                
+                redrawCanvas();
+            });
+        }
+
+        function setMode(newMode) {
+            mode = (mode === newMode) ? 'none' : newMode; // Toggle off if clicked again
+            
+            // UI Updates
+            document.getElementById('btnAreaMode').classList.remove('active');
+            document.getElementById('btnCountMode').classList.remove('active');
+            
+            if (mode === 'area') document.getElementById('btnAreaMode').classList.add('active');
+            if (mode === 'count') document.getElementById('btnCountMode').classList.add('active');
+        }
+
+        function clearTools() {
+            if(confirm("Clear all drawings and counts?")) {
+                areaPoints = [];
+                countPoints = [];
+                mode = 'none';
+                document.getElementById('btnAreaMode').classList.remove('active');
+                document.getElementById('btnCountMode').classList.remove('active');
+                document.getElementById('display_area').innerText = "---";
+                document.getElementById('display_count').innerText = "---";
+                redrawCanvas();
+            }
+        }
+
+        function redrawCanvas() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.drawImage(bgImage, 0, 0);
+
+            // 1. Draw Area Polygon
+            if (areaPoints.length > 0) {
+                ctx.beginPath();
+                ctx.moveTo(areaPoints[0].x, areaPoints[0].y);
+                for (let i = 1; i < areaPoints.length; i++) {
+                    ctx.lineTo(areaPoints[i].x, areaPoints[i].y);
+                }
+                ctx.closePath();
+                ctx.fillStyle = "rgba(255, 193, 7, 0.3)"; 
+                ctx.fill();
+                ctx.lineWidth = 4;
+                ctx.strokeStyle = "#FFC107";
+                ctx.stroke();
+
+                // Vertices
+                ctx.fillStyle = "red";
+                for (let p of areaPoints) {
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, 6, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            }
+
+            // 2. Draw Count Markers
+            ctx.fillStyle = "#00BFFF"; // Deep Sky Blue
+            ctx.strokeStyle = "white";
+            ctx.lineWidth = 2;
+            for (let p of countPoints) {
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, 10, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.stroke();
+            }
+        }
+
+        function calcArea() {
+            if (areaPoints.length < 3) return;
+            // Shoelace Formula
+            let areaPx = 0;
+            for (let i = 0; i < areaPoints.length; i++) {
+                let j = (i + 1) % areaPoints.length;
+                areaPx += areaPoints[i].x * areaPoints[j].y;
+                areaPx -= areaPoints[j].x * areaPoints[i].y;
+            }
+            areaPx = Math.abs(areaPx) / 2;
+
+            const rawWidth = parseFloat(document.getElementById('raw_width_store').value);
+            let realFt = parseFloat(document.getElementById('real_width_input').value);
+            if (!realFt || realFt <= 0) realFt = 1;
+
+            const scale = rawWidth / realFt; 
+            const areaSqFt = areaPx / (scale * scale);
+
+            document.getElementById('display_area').innerText = areaSqFt.toFixed(2) + " sq.ft";
+            
+            // Send to Hidden Input
+            document.getElementById('hidden_area').value = areaSqFt.toFixed(2);
+        }
+
+        function updateCountDisplay() {
+            const count = countPoints.length;
+            document.getElementById('display_count').innerText = count + " items";
+            // Send to Hidden Input
+            document.getElementById('hidden_count').value = count;
+        }
+
         function recalc() {
             try {
+                if(areaPoints.length >= 3) calcArea();
+                updateCountDisplay();
+
                 const rawPixels = parseFloat(document.getElementById('raw_pixels_store').value);
                 const rawWidth = parseFloat(document.getElementById('raw_width_store').value);
                 
-                // 1. Get Calibration & Custom Prices
                 let realFt = parseFloat(document.getElementById('real_width_input').value);
                 if (!realFt || realFt <= 0) realFt = 1;
 
                 let pricePerSheet = parseFloat(document.getElementById('cost_sheet').value) || 15;
                 let pricePerPaint = parseFloat(document.getElementById('cost_paint').value) || 40;
+                let pricePerItem = parseFloat(document.getElementById('cost_item').value) || 50; 
                 
-                // 2. Get Currency Symbol
                 let currencySym = document.getElementById('currency_select').value;
 
-                // 3. Math
+                // Math
                 const scale = rawWidth / realFt; 
                 const totalFeet = rawPixels / scale;
                 const sheets = (totalFeet * 8) / 32;
@@ -299,22 +443,22 @@
                 const costDrywall = sheets * pricePerSheet;
                 const paint = (totalFeet * 8) / 400;
                 const costPaint = paint * pricePerPaint;
-                const totalCost = costDrywall + costPaint;
+                const costItems = countPoints.length * pricePerItem; 
                 
-                // 4. Update Display
+                const totalCost = costDrywall + costPaint + costItems;
+                
                 document.getElementById('display_feet').innerText = totalFeet.toFixed(2) + " ft";
                 document.getElementById('display_cost').innerText = currencySym + totalCost.toFixed(2);
                 
-                // 5. Update Hidden Inputs (Send to Python)
                 document.getElementById('hidden_feet').value = totalFeet.toFixed(2);
                 document.getElementById('hidden_cost').value = totalCost.toFixed(2);
                 document.getElementById('hidden_sheets').value = sheets;
                 document.getElementById('hidden_paint').value = paint;
                 
-                // NEW: Send Currency & Prices to Python
                 document.getElementById('hidden_currency').value = currencySym;
                 document.getElementById('hidden_unit_sheet').value = pricePerSheet;
                 document.getElementById('hidden_unit_paint').value = pricePerPaint;
+                document.getElementById('hidden_unit_item').value = pricePerItem;
                 
                 checkFreeTrial();
             } catch(e) {}
@@ -333,7 +477,6 @@
             <p>Upload your blueprint. Get instant material takeoffs and cost estimates. No complex software required.</p>
             <a href="/tool" class="btn-cta">GET STARTED</a>
         </div>
-
         <div class="container">
             <div class="features">
                 <div class="feature-card">
@@ -352,8 +495,8 @@
                     <div class="feature-desc">Download a professional cost estimate and material list in seconds.</div>
                 </div>
             </div>
-
-            <div class="faq-section">
+            
+             <div class="faq-section">
                 <h2>Frequently Asked Questions</h2>
                 <div class="faq-item">
                     <div class="faq-q"><span class="highlight">?</span> How accurate is the estimation?</div>
@@ -372,7 +515,6 @@
                     <div class="faq-a">Absolutely. After scanning, you can enter your own local prices for Drywall Sheets and Paint to get an exact quote for your specific job.</div>
                 </div>
             </div>
-
             <div class="footer">
                 <p>Have questions? Email us at <a href="mailto:filehangar2025@gmail.com">filehangar2025@gmail.com</a></p>
                 <p style="opacity: 0.7; margin-top: 10px;">&copy; 2024 SnapTakeoff Inc.</p>
@@ -383,7 +525,7 @@
     {% if page == 'tool' %}
         <div class="container">
             <h1 class="page-title">Upload Blueprint.</h1>
-
+            
             <div class="info-section">
                 <h2>Controls Guide</h2>
                 <div class="info-grid">
@@ -424,13 +566,11 @@
                         </div>
                     </div>
                     <hr>
-                    
                     <div style="margin-bottom: 20px;">
                         <label for="file-upload" class="custom-file-upload">📂 CLICK TO SELECT BLUEPRINT</label>
                         <input id="file-upload" type="file" name="file" required onchange="updateFileName(this)">
                         <span id="file-name-text" class="file-name-display">No file chosen yet.</span>
                     </div>
-
                     <button type="submit" class="btn-upload">INITIATE SCAN</button>
                 </form>
             </div>
@@ -443,7 +583,13 @@
                 <h2 style="color: #FFC107;">// ANALYSIS COMPLETE</h2>
                 <div class="results-grid">
                     <div>
-                        <img src="data:image/jpeg;base64,{{ image_data }}" style="width: 100%; border-radius: 8px;">
+                        <canvas id="blueprintCanvas" style="width: 100%; border-radius: 8px;"></canvas>
+                        
+                        <div class="tool-row">
+                            <button id="btnAreaMode" class="btn-tool-toggle" onclick="setMode('area')">📐 AREA (FLOOR)</button>
+                            <button id="btnCountMode" class="btn-tool-toggle" onclick="setMode('count')">👆 COUNT ITEMS</button>
+                            <button class="btn-tool-toggle btn-tool-clear" onclick="clearTools()">🗑️ RESET</button>
+                        </div>
                     </div>
                     <div>
                         <div class="metric-box">
@@ -463,6 +609,11 @@
                         </div>
 
                         <div class="metric-box" style="margin-bottom: 10px;">
+                            <div class="metric-label">COST PER ITEM</div>
+                            <input type="number" id="cost_item" class="calib-input" value="50" oninput="recalc()">
+                        </div>
+
+                        <div class="metric-box" style="margin-bottom: 10px;">
                             <div class="metric-label">CURRENCY</div>
                             <select id="currency_select" class="calib-input" style="width: 100%;" onchange="recalc()">
                                 <option value="$">USD ($)</option>
@@ -477,6 +628,9 @@
                         </div>
 
                         <div class="metric-box"><div class="metric-val" id="display_feet">---</div><div class="metric-label">TOTAL LINEAR FEET</div></div>
+                        <div class="metric-box"><div class="metric-val" id="display_area">---</div><div class="metric-label">FLOOR AREA</div></div>
+                        <div class="metric-box"><div class="metric-val" id="display_count">---</div><div class="metric-label">ITEMS COUNTED</div></div>
+
                         <div class="metric-box"><div class="metric-val" id="display_cost">---</div><div class="metric-label">ESTIMATED COST</div></div>
                         
                         <form id="download_form" action="/download_report" method="post">
@@ -484,10 +638,13 @@
                             <input type="hidden" name="final_cost" id="hidden_cost">
                             <input type="hidden" name="final_sheets" id="hidden_sheets">
                             <input type="hidden" name="final_paint" id="hidden_paint">
+                            <input type="hidden" name="final_area" id="hidden_area" value="0">
+                            <input type="hidden" name="final_count" id="hidden_count" value="0">
                             
                             <input type="hidden" name="currency_symbol" id="hidden_currency">
                             <input type="hidden" name="unit_price_sheet" id="hidden_unit_sheet">
                             <input type="hidden" name="unit_price_paint" id="hidden_unit_paint">
+                            <input type="hidden" name="unit_price_item" id="hidden_unit_item">
                             
                             <button type="button" id="btn-free" onclick="useFreeTrial()" class="btn-free">
                                 🎁 UNLOCK FOR FREE (1 TIME ONLY)
@@ -501,7 +658,10 @@
                     </div>
                 </div>
             </div>
-            <script>recalc();</script>
+            <script>
+                initCanvas("{{ image_data }}");
+                recalc();
+            </script>
             {% endif %}
         </div>
     {% endif %}

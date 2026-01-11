@@ -6,8 +6,6 @@ import io
 import os
 from flask import Flask, render_template, request, send_file
 
-# --- CHANGE IS HERE: template_folder='.' ---
-# This tells Flask to look for html files in the current directory
 app = Flask(__name__, template_folder='.')
 
 def process_walls(file_stream, thresh, min_len, gap, thick):
@@ -61,32 +59,69 @@ def tool():
                            page='tool', 
                            result=True, 
                            image_data=img_str, 
-                           raw_pixels=pixels,      
-                           raw_width=width_px,     
+                           raw_pixels=pixels,       
+                           raw_width=width_px,      
                            params={'thresh': thresh, 'min_len': min_len, 'gap': gap, 'thick': thick})
 
 @app.route('/download_report', methods=['POST'])
 def download_report():
     try:
-        feet = float(request.form.get('final_feet'))
-        cost = float(request.form.get('final_cost'))
-        sheets = float(request.form.get('final_sheets'))
-        paint = float(request.form.get('final_paint'))
+        feet = float(request.form.get('final_feet', 0))
+        cost = float(request.form.get('final_cost', 0))
+        sheets = float(request.form.get('final_sheets', 0))
+        paint = float(request.form.get('final_paint', 0))
         
-        # Get Currency & Prices (Defaults if missing)
+        # New Inputs from JS
+        area_sqft = float(request.form.get('final_area', 0))
+        item_count = float(request.form.get('final_count', 0))
+        
+        # Currency & Prices
         currency_sym = request.form.get('currency_symbol', '$')
         unit_sheet = float(request.form.get('unit_price_sheet', 15))
         unit_paint = float(request.form.get('unit_price_paint', 40))
+        unit_item = float(request.form.get('unit_price_item', 50))
         
     except:
         return "Error: Data missing."
 
     # Dynamic Excel Logic
     df = pd.DataFrame({
-        "Line Item": ["Total Wall Length", "Drywall Sheets (4x8)", "Paint Gallons", "Labor & Misc", "TOTAL ESTIMATE"],
-        "Quantity": [f"{feet:.2f} ft", f"{sheets:.0f} sheets", f"{paint:.1f} gal", "-", "-"],
-        "Unit Cost": ["-", f"{currency_sym}{unit_sheet:.2f}", f"{currency_sym}{unit_paint:.2f}", "-", "-"],
-        "Total": ["-", f"{currency_sym}{sheets*unit_sheet:.2f}", f"{currency_sym}{paint*unit_paint:.2f}", "-", f"{currency_sym}{cost:.2f}"]
+        "Line Item": [
+            "Total Wall Length", 
+            "Drywall Sheets (4x8)", 
+            "Paint Gallons", 
+            "Flooring Area",         # New
+            "Fixtures/Items (Count)", # New
+            "Labor & Misc", 
+            "TOTAL ESTIMATE"
+        ],
+        "Quantity": [
+            f"{feet:.2f} ft", 
+            f"{sheets:.0f} sheets", 
+            f"{paint:.1f} gal", 
+            f"{area_sqft:.2f} sq.ft", # New
+            f"{item_count:.0f} items", # New
+            "-", 
+            "-"
+        ],
+        "Unit Cost": [
+            "-", 
+            f"{currency_sym}{unit_sheet:.2f}", 
+            f"{currency_sym}{unit_paint:.2f}", 
+            "-",                       # Flooring usually implies separate material cost, keeping simple for now
+            f"{currency_sym}{unit_item:.2f}", # New
+            "-", 
+            "-"
+        ],
+        "Total": [
+            "-", 
+            f"{currency_sym}{sheets*unit_sheet:.2f}", 
+            f"{currency_sym}{paint*unit_paint:.2f}", 
+            "-", 
+            f"{currency_sym}{item_count*unit_item:.2f}", # New
+            "-", 
+            f"{currency_sym}{cost:.2f}"
+        ]
     })
 
     output = io.BytesIO()
@@ -96,7 +131,6 @@ def download_report():
     
     return send_file(output, download_name="SnapTakeoff_Quote.xlsx", as_attachment=True)
 
-# --- NEW: FAVICON ROUTE ---
 @app.route('/favicon.ico')
 def favicon():
     return send_file('favicon.png', mimetype='image/png')
