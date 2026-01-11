@@ -4,3 +4,4 @@ pandas
 openpyxl
 gunicorn
 opencv-python-headless
+PyMuPDF

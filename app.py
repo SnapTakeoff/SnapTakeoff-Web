@@ -4,6 +4,8 @@ import cv2
 import pandas as pd
 import io
 import os
+import json # New import for parsing room data
+import fitz # PyMuPDF
 from flask import Flask, render_template, request, send_file
 
 app = Flask(__name__, template_folder='.')
@@ -53,7 +55,16 @@ def tool():
     gap = int(request.form.get('gap', 20))
     thick = int(request.form.get('thick', 1))
 
-    img_str, pixels, width_px = process_walls(file, thresh, min_len, gap, thick)
+    # --- PDF HANDLING ---
+    if file.filename.lower().endswith('.pdf'):
+        doc = fitz.open(stream=file.read(), filetype="pdf")
+        page = doc.load_page(0)
+        pix = page.get_pixmap(dpi=200)
+        img_bytes = pix.tobytes("png")
+        file_stream = io.BytesIO(img_bytes)
+        img_str, pixels, width_px = process_walls(file_stream, thresh, min_len, gap, thick)
+    else:
+        img_str, pixels, width_px = process_walls(file, thresh, min_len, gap, thick)
     
     return render_template('index.html', 
                            page='tool', 
@@ -70,7 +81,10 @@ def download_report():
         cost = float(request.form.get('final_cost', 0))
         sheets = float(request.form.get('final_sheets', 0))
         paint = float(request.form.get('final_paint', 0))
-        area_sqft = float(request.form.get('final_area', 0))
+        
+        # Parse Breakdown JSON for multiple rooms
+        area_breakdown_json = request.form.get('area_breakdown', '[]')
+        area_breakdown = json.loads(area_breakdown_json)
         
         # New Category Data
         count_elec = int(request.form.get('count_elec', 0))
@@ -89,52 +103,45 @@ def download_report():
     except:
         return "Error: Data missing."
 
-    # Dynamic Excel Logic
+    # --- DYNAMIC EXCEL CONSTRUCTION ---
+    
+    # 1. Base Materials
+    line_items = ["Total Wall Length", "Drywall Sheets (4x8)", "Paint Gallons"]
+    quantities = [f"{feet:.2f} ft", f"{sheets:.0f} sheets", f"{paint:.1f} gal"]
+    unit_costs = ["-", f"{currency_sym}{unit_sheet:.2f}", f"{currency_sym}{unit_paint:.2f}"]
+    totals = ["-", f"{currency_sym}{sheets*unit_sheet:.2f}", f"{currency_sym}{paint*unit_paint:.2f}"]
+
+    # 2. Add Individual Rooms
+    if area_breakdown:
+        for room in area_breakdown:
+            line_items.append(f"Flooring: {room['name']}")
+            quantities.append(f"{room['sqft']} sq.ft")
+            unit_costs.append("-") # Flooring material cost not yet implemented
+            totals.append("-")
+    else:
+        # Fallback if no rooms defined but area exists
+        line_items.append("Flooring Area")
+        quantities.append(f"{float(request.form.get('final_area', 0)):.2f} sq.ft")
+        unit_costs.append("-")
+        totals.append("-")
+
+    # 3. Add Counts
+    line_items.extend(["Electrical Fix (Sockets/Switch)", "Plumbing Fix (Sinks/Toilets)", "HVAC/Mechanical Vents"])
+    quantities.extend([f"{count_elec} items", f"{count_plumb} items", f"{count_hvac} items"])
+    unit_costs.extend([f"{currency_sym}{unit_elec:.2f}", f"{currency_sym}{unit_plumb:.2f}", f"{currency_sym}{unit_hvac:.2f}"])
+    totals.extend([f"{currency_sym}{count_elec*unit_elec:.2f}", f"{currency_sym}{count_plumb*unit_plumb:.2f}", f"{currency_sym}{count_hvac*unit_hvac:.2f}"])
+
+    # 4. Final Totals
+    line_items.extend(["Labor & Misc", "TOTAL ESTIMATE"])
+    quantities.extend(["-", "-"])
+    unit_costs.extend(["-", "-"])
+    totals.extend(["-", f"{currency_sym}{cost:.2f}"])
+
     df = pd.DataFrame({
-        "Line Item": [
-            "Total Wall Length", 
-            "Drywall Sheets (4x8)", 
-            "Paint Gallons", 
-            "Flooring Area",         
-            "Electrical Fix (Sockets/Switch)",
-            "Plumbing Fix (Sinks/Toilets)",
-            "HVAC/Mechanical Vents",
-            "Labor & Misc", 
-            "TOTAL ESTIMATE"
-        ],
-        "Quantity": [
-            f"{feet:.2f} ft", 
-            f"{sheets:.0f} sheets", 
-            f"{paint:.1f} gal", 
-            f"{area_sqft:.2f} sq.ft", 
-            f"{count_elec} items",
-            f"{count_plumb} items",
-            f"{count_hvac} items",
-            "-", 
-            "-"
-        ],
-        "Unit Cost": [
-            "-", 
-            f"{currency_sym}{unit_sheet:.2f}", 
-            f"{currency_sym}{unit_paint:.2f}", 
-            "-",                       
-            f"{currency_sym}{unit_elec:.2f}",
-            f"{currency_sym}{unit_plumb:.2f}",
-            f"{currency_sym}{unit_hvac:.2f}",
-            "-", 
-            "-"
-        ],
-        "Total": [
-            "-", 
-            f"{currency_sym}{sheets*unit_sheet:.2f}", 
-            f"{currency_sym}{paint*unit_paint:.2f}", 
-            "-", 
-            f"{currency_sym}{count_elec*unit_elec:.2f}",
-            f"{currency_sym}{count_plumb*unit_plumb:.2f}",
-            f"{currency_sym}{count_hvac*unit_hvac:.2f}",
-            "-", 
-            f"{currency_sym}{cost:.2f}"
-        ]
+        "Line Item": line_items,
+        "Quantity": quantities,
+        "Unit Cost": unit_costs,
+        "Total": totals
     })
 
     output = io.BytesIO()

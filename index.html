@@ -200,6 +200,51 @@
             overflow: hidden;
         }
 
+        /* --- PROJECT & ROOM LIST STYLES --- */
+        .project-row {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        .btn-proj {
+            background: #21262d; 
+            color: #c9d1d9; 
+            border: 1px solid #30363d; 
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .btn-proj:hover { background: #30363d; color: white; }
+
+        .room-list-container {
+            margin-top: 15px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        .room-chip {
+            background: rgba(50, 205, 50, 0.15);
+            border: 1px solid #32CD32;
+            color: #32CD32;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .room-chip .del-btn {
+            cursor: pointer;
+            color: #f85149;
+            font-weight: 800;
+            margin-left: 5px;
+        }
+        .room-chip .del-btn:hover { color: white; }
+
         h1.page-title { color: #1f2937; margin-top: 0; font-size: 3rem; text-align: center; margin-bottom: 30px;}
         .slider-row { display: flex; align-items: center; gap: 15px; }
         .slider-container { flex-grow: 1; margin-bottom: 15px; }
@@ -312,11 +357,12 @@
 
         // --- CANVAS TOOLS LOGIC ---
         let areaPoints = [];
+        let savedAreas = []; // Stores {name, points}
         let countPoints = []; 
         let scalePoints = []; 
         let mode = 'none'; 
         let currentCategory = 'elec'; 
-        let isLoupeEnabled = true; // DEFAULT ON
+        let isLoupeEnabled = true; 
         let canvas, ctx, bgImage;
         let mouseX = 0;
         let mouseY = 0;
@@ -333,7 +379,6 @@
             };
             bgImage.src = "data:image/jpeg;base64," + imgDataStr;
 
-            // Track mouse for Loupe
             canvas.addEventListener('mousemove', function(e) {
                 const rect = canvas.getBoundingClientRect();
                 const scaleX = canvas.width / rect.width;
@@ -371,6 +416,115 @@
             });
         }
 
+        // --- EXPORT / IMPORT LOGIC ---
+        function exportProject() {
+            const projectData = {
+                savedAreas: savedAreas,
+                countPoints: countPoints,
+                calibration: document.getElementById('real_width_input').value,
+                costs: {
+                    sheet: document.getElementById('cost_sheet').value,
+                    paint: document.getElementById('cost_paint').value,
+                    elec: document.getElementById('cost_elec').value,
+                    plumb: document.getElementById('cost_plumb').value,
+                    hvac: document.getElementById('cost_hvac').value
+                },
+                currency: document.getElementById('currency_select').value
+            };
+            
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(projectData));
+            const downloadAnchorNode = document.createElement('a');
+            downloadAnchorNode.setAttribute("href", dataStr);
+            downloadAnchorNode.setAttribute("download", "snaptakeoff_project.json");
+            document.body.appendChild(downloadAnchorNode);
+            downloadAnchorNode.click();
+            downloadAnchorNode.remove();
+        }
+
+        function triggerImport() {
+            document.getElementById('importFile').click();
+        }
+
+        function importProject(input) {
+            if (input.files.length > 0) {
+                const file = input.files[0];
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    try {
+                        const data = JSON.parse(e.target.result);
+                        
+                        // Restore Data
+                        if(data.savedAreas) savedAreas = data.savedAreas;
+                        if(data.countPoints) countPoints = data.countPoints;
+                        
+                        // Restore Inputs
+                        if(data.calibration) document.getElementById('real_width_input').value = data.calibration;
+                        if(data.costs) {
+                            if(data.costs.sheet) document.getElementById('cost_sheet').value = data.costs.sheet;
+                            if(data.costs.paint) document.getElementById('cost_paint').value = data.costs.paint;
+                            if(data.costs.elec) document.getElementById('cost_elec').value = data.costs.elec;
+                            if(data.costs.plumb) document.getElementById('cost_plumb').value = data.costs.plumb;
+                            if(data.costs.hvac) document.getElementById('cost_hvac').value = data.costs.hvac;
+                        }
+                        if(data.currency) document.getElementById('currency_select').value = data.currency;
+
+                        // Refresh UI
+                        renderRoomList();
+                        recalc();
+                        redrawCanvas();
+                        alert("✅ Project Loaded Successfully!");
+                    } catch(err) {
+                        alert("Error loading project file.");
+                    }
+                };
+                reader.readAsText(file);
+            }
+        }
+
+        // --- UNDO / DELETE LOGIC ---
+        function undoAction() {
+            if (mode === 'area' && areaPoints.length > 0) {
+                areaPoints.pop();
+                calcArea();
+            } else if (mode === 'count' && countPoints.length > 0) {
+                // If counting, remove last added dot
+                countPoints.pop();
+                updateCountDisplay();
+                recalc();
+            } else {
+                alert("Nothing to undo in current mode.");
+            }
+            redrawCanvas();
+        }
+
+        function deleteRoom(index) {
+            if(confirm("Delete saved room: " + savedAreas[index].name + "?")) {
+                savedAreas.splice(index, 1);
+                renderRoomList();
+                recalc();
+                redrawCanvas();
+            }
+        }
+
+        function renderRoomList() {
+            const container = document.getElementById('roomListContainer');
+            container.innerHTML = "";
+            savedAreas.forEach((room, index) => {
+                const chip = document.createElement('div');
+                chip.className = 'room-chip';
+                chip.innerHTML = `<span>${room.name}</span> <span class="del-btn" onclick="deleteRoom(${index})">×</span>`;
+                container.appendChild(chip);
+            });
+        }
+
+        function downloadCanvas() {
+            if(!canvas) return;
+            var link = document.createElement('a');
+            link.download = 'SnapTakeoff-Blueprint.png';
+            link.href = canvas.toDataURL("image/png");
+            link.click();
+        }
+
         function finalizeScale() {
             let ft = prompt("Enter the real-world length of the line you just drew (in Feet):", "3.0");
             if (ft && !isNaN(ft) && parseFloat(ft) > 0) {
@@ -394,6 +548,24 @@
             redrawCanvas();
         }
 
+        function saveCurrentArea() {
+            if(areaPoints.length < 3) {
+                alert("Please draw an area first (at least 3 points).");
+                return;
+            }
+            let name = prompt("Name this area (e.g. Kitchen, Master Bed):", "Room " + (savedAreas.length + 1));
+            if(name) {
+                savedAreas.push({
+                    name: name,
+                    points: [...areaPoints] 
+                });
+                areaPoints = []; 
+                renderRoomList(); // Update UI
+                recalc();
+                redrawCanvas();
+            }
+        }
+
         function setMode(newMode) {
             mode = (mode === newMode) ? 'none' : newMode; 
             if (mode !== 'scale') scalePoints = [];
@@ -403,15 +575,19 @@
             document.getElementById('btnScaleMode').classList.remove('active');
             document.getElementById('catSelector').classList.add('hidden'); 
             
-            // Cursor logic
-            if (mode === 'none') canvas.style.cursor = 'default';
-            else if (mode === 'count') canvas.style.cursor = 'crosshair';
-            else canvas.style.cursor = 'none'; // Hide cursor if loupe might be active
+            document.getElementById('btnSaveArea').classList.add('hidden'); 
 
-            if (mode === 'area') document.getElementById('btnAreaMode').classList.add('active');
+            if (mode === 'none') canvas.style.cursor = 'default';
+            else canvas.style.cursor = 'none';
+
+            if (mode === 'area') {
+                document.getElementById('btnAreaMode').classList.add('active');
+                document.getElementById('btnSaveArea').classList.remove('hidden'); 
+            }
             if (mode === 'count') {
                 document.getElementById('btnCountMode').classList.add('active');
                 document.getElementById('catSelector').classList.remove('hidden'); 
+                canvas.style.cursor = 'crosshair'; 
             }
             if (mode === 'scale') document.getElementById('btnScaleMode').classList.add('active');
             
@@ -427,7 +603,6 @@
             } else {
                 btn.classList.remove('active');
                 btn.innerText = "🔍 ZOOM: OFF";
-                // Restore cursor if we are in a mode that hides it
                 if (mode === 'area' || mode === 'scale') canvas.style.cursor = 'crosshair';
             }
             redrawCanvas();
@@ -440,6 +615,7 @@
         function clearTools() {
             if(confirm("Clear all drawings and counts?")) {
                 areaPoints = [];
+                savedAreas = [];
                 countPoints = [];
                 scalePoints = [];
                 mode = 'none';
@@ -448,8 +624,10 @@
                 document.getElementById('btnCountMode').classList.remove('active');
                 document.getElementById('btnScaleMode').classList.remove('active');
                 document.getElementById('catSelector').classList.add('hidden');
+                document.getElementById('btnSaveArea').classList.add('hidden');
                 document.getElementById('display_area').innerText = "---";
                 document.getElementById('display_count').innerText = "---";
+                renderRoomList();
                 redrawCanvas();
                 recalc();
             }
@@ -460,7 +638,36 @@
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             ctx.drawImage(bgImage, 0, 0);
 
-            // 1. Draw Area Polygon
+            // 0. Draw SAVED Areas (Green)
+            for(let room of savedAreas) {
+                if(room.points.length > 0) {
+                    ctx.beginPath();
+                    ctx.moveTo(room.points[0].x, room.points[0].y);
+                    for (let i = 1; i < room.points.length; i++) {
+                        ctx.lineTo(room.points[i].x, room.points[i].y);
+                    }
+                    ctx.closePath();
+                    ctx.fillStyle = "rgba(50, 205, 50, 0.4)"; 
+                    ctx.fill();
+                    ctx.lineWidth = 2;
+                    ctx.strokeStyle = "#32CD32";
+                    ctx.stroke();
+
+                    let cx = 0, cy = 0;
+                    for(let p of room.points) { cx += p.x; cy += p.y; }
+                    cx /= room.points.length;
+                    cy /= room.points.length;
+
+                    ctx.fillStyle = "white";
+                    ctx.font = "bold 16px Arial";
+                    ctx.strokeStyle = "black";
+                    ctx.lineWidth = 3;
+                    ctx.strokeText(room.name, cx - 20, cy);
+                    ctx.fillText(room.name, cx - 20, cy);
+                }
+            }
+
+            // 1. Draw Current Area Polygon (Yellow)
             if (areaPoints.length > 0) {
                 ctx.beginPath();
                 ctx.moveTo(areaPoints[0].x, areaPoints[0].y);
@@ -515,29 +722,19 @@
                 }
             }
 
-            // 4. DRAW MAGNIFYING GLASS (LOUPE)
-            // Checked against toggle AND mode
+            // 4. DRAW MAGNIFYING GLASS
             if (isLoupeEnabled && (mode === 'area' || mode === 'scale')) {
-                // Ensure cursor is hidden so loupe is visible without obstruction
                 canvas.style.cursor = 'none';
-
                 const zoom = 4;
-                const r = 75; // Radius of loupe
+                const r = 75; 
                 
                 ctx.save();
                 ctx.beginPath();
                 ctx.arc(mouseX, mouseY, r, 0, Math.PI * 2);
                 ctx.clip();
-                
                 ctx.fillStyle = "white";
                 ctx.fillRect(mouseX - r, mouseY - r, r * 2, r * 2);
-
-                ctx.drawImage(
-                    bgImage, 
-                    mouseX - r/zoom, mouseY - r/zoom, (r*2)/zoom, (r*2)/zoom, 
-                    mouseX - r, mouseY - r, r*2, r*2
-                );
-                
+                ctx.drawImage(bgImage, mouseX - r/zoom, mouseY - r/zoom, (r*2)/zoom, (r*2)/zoom, mouseX - r, mouseY - r, r*2, r*2);
                 ctx.strokeStyle = "#00FFFF"; 
                 ctx.lineWidth = 1;
                 ctx.beginPath();
@@ -546,9 +743,7 @@
                 ctx.moveTo(mouseX, mouseY - 10);
                 ctx.lineTo(mouseX, mouseY + 10);
                 ctx.stroke();
-
                 ctx.restore();
-
                 ctx.beginPath();
                 ctx.arc(mouseX, mouseY, r, 0, Math.PI * 2);
                 ctx.lineWidth = 3;
@@ -558,32 +753,52 @@
                 ctx.strokeStyle = "black";
                 ctx.stroke();
             } else {
-                // If Loupe is OFF but we are in a drawing mode, ensure crosshair is visible
                 if (mode === 'area' || mode === 'scale') {
                     canvas.style.cursor = 'crosshair';
                 }
             }
         }
 
-        function calcArea() {
-            if (areaPoints.length < 3) return;
+        function getPolyArea(points) {
+            if (points.length < 3) return 0;
             let areaPx = 0;
-            for (let i = 0; i < areaPoints.length; i++) {
-                let j = (i + 1) % areaPoints.length;
-                areaPx += areaPoints[i].x * areaPoints[j].y;
-                areaPx -= areaPoints[j].x * areaPoints[i].y;
+            for (let i = 0; i < points.length; i++) {
+                let j = (i + 1) % points.length;
+                areaPx += points[i].x * points[j].y;
+                areaPx -= points[j].x * points[i].y;
             }
-            areaPx = Math.abs(areaPx) / 2;
+            return Math.abs(areaPx) / 2;
+        }
 
+        function calcArea() {
+            // Need scale
             const rawWidth = parseFloat(document.getElementById('raw_width_store').value);
             let realFt = parseFloat(document.getElementById('real_width_input').value);
             if (!realFt || realFt <= 0) realFt = 1;
-
             const scale = rawWidth / realFt; 
-            const areaSqFt = areaPx / (scale * scale);
 
-            document.getElementById('display_area').innerText = areaSqFt.toFixed(2) + " sq.ft";
-            document.getElementById('hidden_area').value = areaSqFt.toFixed(2);
+            // Sum up SAVED areas
+            let totalSavedSqFt = 0;
+            let breakdown = [];
+
+            for(let room of savedAreas) {
+                let px = getPolyArea(room.points);
+                let sqft = px / (scale * scale);
+                totalSavedSqFt += sqft;
+                breakdown.push({name: room.name, sqft: sqft.toFixed(2)});
+            }
+
+            // Add Current Area (being drawn)
+            let currentPx = getPolyArea(areaPoints);
+            let currentSqFt = currentPx / (scale * scale);
+            
+            let totalSqFt = totalSavedSqFt + currentSqFt;
+
+            document.getElementById('display_area').innerText = totalSqFt.toFixed(2) + " sq.ft";
+            document.getElementById('hidden_area').value = totalSqFt.toFixed(2);
+            
+            // Send JSON breakdown to Python
+            document.getElementById('hidden_area_breakdown').value = JSON.stringify(breakdown);
         }
 
         function updateCountDisplay() {
@@ -593,7 +808,8 @@
 
         function recalc() {
             try {
-                if(areaPoints.length >= 3) calcArea();
+                // Always recalc area because scale might have changed
+                calcArea();
                 updateCountDisplay();
 
                 const rawPixels = parseFloat(document.getElementById('raw_pixels_store').value);
@@ -605,7 +821,6 @@
                 let pricePerSheet = parseFloat(document.getElementById('cost_sheet').value) || 15;
                 let pricePerPaint = parseFloat(document.getElementById('cost_paint').value) || 40;
                 
-                // New Category Costs
                 let costElecUnit = parseFloat(document.getElementById('cost_elec').value) || 5;
                 let costPlumbUnit = parseFloat(document.getElementById('cost_plumb').value) || 150;
                 let costHvacUnit = parseFloat(document.getElementById('cost_hvac').value) || 80;
@@ -621,7 +836,6 @@
                 const paint = (totalFeet * 8) / 400;
                 const costPaint = paint * pricePerPaint;
                 
-                // Tally Categories
                 let countElec = 0;
                 let countPlumb = 0;
                 let countHvac = 0;
@@ -649,7 +863,6 @@
                 document.getElementById('hidden_unit_sheet').value = pricePerSheet;
                 document.getElementById('hidden_unit_paint').value = pricePerPaint;
                 
-                // Send specific counts and units
                 document.getElementById('hidden_count_elec').value = countElec;
                 document.getElementById('hidden_count_plumb').value = countPlumb;
                 document.getElementById('hidden_count_hvac').value = countHvac;
@@ -759,13 +972,13 @@
                         </div>
                         <div>
                             <div class="slider-container"><label class="slider-label">Gap Fill</label><div class="slider-row"><input type="range" id="range_gap" name="gap" min="5" max="100" value="{{ params.gap }}" oninput="syncInputs('range_gap', 'num_gap')"><input type="number" id="num_gap" min="5" max="100" value="{{ params.gap }}" oninput="syncInputs('num_gap', 'range_gap')"></div></div>
-                            <div class="slider-container"><label class="slider-label">Wall Thickness</label><div class="slider-row"><input type="range" id="range_thick" name="thick" min="1" max="10" value="{{ params.thick }}" oninput="syncInputs('range_thick', 'num_thick')"><input type="number" id="num_thick" min="1" max="10" value="{{ params.thick }}" oninput="syncInputs('range_thick', 'num_thick')"></div></div>
+                            <div class="slider-container"><label class="slider-label">Wall Thickness</label><div class="slider-row"><input type="range" id="range_thick" name="thick" min="1" max="10" value="{{ params.thick }}" oninput="syncInputs('range_thick', 'num_thick')"><input type="number" id="num_thick" min="1" max="10" value="{{ params.thick }}" oninput="syncInputs('num_thick', 'range_thick')"></div></div>
                         </div>
                     </div>
                     <hr>
                     <div style="margin-bottom: 20px;">
                         <label for="file-upload" class="custom-file-upload">📂 CLICK TO SELECT BLUEPRINT</label>
-                        <input id="file-upload" type="file" name="file" required onchange="updateFileName(this)">
+                        <input id="file-upload" type="file" name="file" accept="image/*,.pdf" required onchange="updateFileName(this)">
                         <span id="file-name-text" class="file-name-display">No file chosen yet.</span>
                     </div>
                     <button type="submit" class="btn-upload">INITIATE SCAN</button>
@@ -780,11 +993,19 @@
                 <h2 style="color: #FFC107;">// ANALYSIS COMPLETE</h2>
                 <div class="results-grid">
                     <div>
+                        <div class="project-row">
+                            <button class="btn-proj" onclick="exportProject()">💾 EXPORT PROJECT</button>
+                            <button class="btn-proj" onclick="triggerImport()">📂 IMPORT PROJECT</button>
+                            <input type="file" id="importFile" class="hidden" accept=".json" onchange="importProject(this)">
+                        </div>
+
                         <canvas id="blueprintCanvas" style="width: 100%; border-radius: 8px;"></canvas>
                         
                         <div class="tool-row">
                             <button id="btnScaleMode" class="btn-tool-toggle" onclick="setMode('scale')">📏 CALIBRATE</button>
                             <button id="btnAreaMode" class="btn-tool-toggle" onclick="setMode('area')">📐 AREA</button>
+                            
+                            <button id="btnSaveArea" class="btn-tool-toggle hidden" style="background-color: #2ea043; color: white;" onclick="saveCurrentArea()">💾 SAVE AREA</button>
                             
                             <button id="btnCountMode" class="btn-tool-toggle" onclick="setMode('count')">👆 COUNT</button>
                             <select id="catSelector" class="cat-select hidden" onchange="updateCategory()">
@@ -793,9 +1014,14 @@
                                 <option value="hvac">❄️ HVAC</option>
                             </select>
 
-                            <button id="btnLoupeToggle" class="btn-tool-toggle active" onclick="toggleLoupe()">🔍 ZOOM: ON</button>
+                            <button id="btnLoupeToggle" class="btn-tool-toggle active" onclick="toggleLoupe()">🔍 ZOOM</button>
+                            <button class="btn-tool-toggle" onclick="undoAction()">↩️ UNDO</button>
                             <button class="btn-tool-toggle btn-tool-clear" onclick="clearTools()">🗑️ RESET</button>
+                            <button class="btn-tool-toggle" onclick="downloadCanvas()">📷 IMG</button>
                         </div>
+                        
+                        <div id="roomListContainer" class="room-list-container">
+                            </div>
                     </div>
                     <div>
                         <div class="metric-box">
@@ -855,6 +1081,8 @@
                             <input type="hidden" name="final_sheets" id="hidden_sheets">
                             <input type="hidden" name="final_paint" id="hidden_paint">
                             <input type="hidden" name="final_area" id="hidden_area" value="0">
+                            
+                            <input type="hidden" name="area_breakdown" id="hidden_area_breakdown" value="[]">
                             
                             <input type="hidden" name="currency_symbol" id="hidden_currency">
                             <input type="hidden" name="unit_price_sheet" id="hidden_unit_sheet">
