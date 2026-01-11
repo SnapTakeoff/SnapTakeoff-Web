@@ -70,16 +70,21 @@ def download_report():
         cost = float(request.form.get('final_cost', 0))
         sheets = float(request.form.get('final_sheets', 0))
         paint = float(request.form.get('final_paint', 0))
-        
-        # New Inputs from JS
         area_sqft = float(request.form.get('final_area', 0))
-        item_count = float(request.form.get('final_count', 0))
+        
+        # New Category Data
+        count_elec = int(request.form.get('count_elec', 0))
+        count_plumb = int(request.form.get('count_plumb', 0))
+        count_hvac = int(request.form.get('count_hvac', 0))
+        
+        unit_elec = float(request.form.get('unit_elec', 0))
+        unit_plumb = float(request.form.get('unit_plumb', 0))
+        unit_hvac = float(request.form.get('unit_hvac', 0))
         
         # Currency & Prices
         currency_sym = request.form.get('currency_symbol', '$')
         unit_sheet = float(request.form.get('unit_price_sheet', 15))
         unit_paint = float(request.form.get('unit_price_paint', 40))
-        unit_item = float(request.form.get('unit_price_item', 50))
         
     except:
         return "Error: Data missing."
@@ -90,8 +95,10 @@ def download_report():
             "Total Wall Length", 
             "Drywall Sheets (4x8)", 
             "Paint Gallons", 
-            "Flooring Area",         # New
-            "Fixtures/Items (Count)", # New
+            "Flooring Area",         
+            "Electrical Fix (Sockets/Switch)",
+            "Plumbing Fix (Sinks/Toilets)",
+            "HVAC/Mechanical Vents",
             "Labor & Misc", 
             "TOTAL ESTIMATE"
         ],
@@ -99,8 +106,10 @@ def download_report():
             f"{feet:.2f} ft", 
             f"{sheets:.0f} sheets", 
             f"{paint:.1f} gal", 
-            f"{area_sqft:.2f} sq.ft", # New
-            f"{item_count:.0f} items", # New
+            f"{area_sqft:.2f} sq.ft", 
+            f"{count_elec} items",
+            f"{count_plumb} items",
+            f"{count_hvac} items",
             "-", 
             "-"
         ],
@@ -108,8 +117,10 @@ def download_report():
             "-", 
             f"{currency_sym}{unit_sheet:.2f}", 
             f"{currency_sym}{unit_paint:.2f}", 
-            "-",                       # Flooring usually implies separate material cost, keeping simple for now
-            f"{currency_sym}{unit_item:.2f}", # New
+            "-",                       
+            f"{currency_sym}{unit_elec:.2f}",
+            f"{currency_sym}{unit_plumb:.2f}",
+            f"{currency_sym}{unit_hvac:.2f}",
             "-", 
             "-"
         ],
@@ -118,7 +129,9 @@ def download_report():
             f"{currency_sym}{sheets*unit_sheet:.2f}", 
             f"{currency_sym}{paint*unit_paint:.2f}", 
             "-", 
-            f"{currency_sym}{item_count*unit_item:.2f}", # New
+            f"{currency_sym}{count_elec*unit_elec:.2f}",
+            f"{currency_sym}{count_plumb*unit_plumb:.2f}",
+            f"{currency_sym}{count_hvac*unit_hvac:.2f}",
             "-", 
             f"{currency_sym}{cost:.2f}"
         ]

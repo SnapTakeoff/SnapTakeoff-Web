@@ -68,8 +68,9 @@
             background-color: #ffb300;
         }
 
+        /* --- WIDENED CONTAINER --- */
         .container {
-            max-width: 900px;
+            max-width: 1200px;
             margin: 0 auto;
             padding: 60px 20px;
         }
@@ -176,6 +177,29 @@
             border-color: #30363d;
         }
 
+        /* --- COMPACT STYLES --- */
+        .calib-input-compact {
+            width: 100%;
+            font-size: 13px;
+            padding: 4px 0; 
+            text-align: center;
+            font-weight: bold;
+            border-radius: 5px;
+            border: 1px solid #30363d;
+            background-color: #0d1117; 
+            color: #FFC107;
+            box-sizing: border-box; 
+            min-width: 0; 
+        }
+        .metric-box-compact {
+            padding: 5px 2px;
+            background: #0d1117;
+            border: 1px solid #30363d;
+            border-radius: 8px;
+            text-align: center;
+            overflow: hidden;
+        }
+
         h1.page-title { color: #1f2937; margin-top: 0; font-size: 3rem; text-align: center; margin-bottom: 30px;}
         .slider-row { display: flex; align-items: center; gap: 15px; }
         .slider-container { flex-grow: 1; margin-bottom: 15px; }
@@ -224,13 +248,15 @@
         .btn-free:hover { background-color: #FFC107; color: #0a0e17; }
         
         /* New Tools Buttons */
-        .tool-row { display: flex; gap: 10px; margin-top: 10px; }
+        .tool-row { display: flex; gap: 10px; margin-top: 10px; align-items: center; }
         .btn-tool-toggle {
-            background: #0d1117; color: #8b949e; border: 1px solid #30363d; padding: 10px 20px;
-            cursor: pointer; border-radius: 6px; font-weight: bold; width: 100%;
+            background: #0d1117; color: #8b949e; border: 1px solid #30363d; padding: 10px 15px;
+            cursor: pointer; border-radius: 6px; font-weight: bold; flex-grow: 1;
         }
         .btn-tool-toggle.active { background: #FFC107; color: #0a0e17; border-color: #FFC107; }
-        .btn-tool-clear { background: #21262d; color: #f85149; border: 1px solid #30363d; }
+        .btn-tool-clear { background: #21262d; color: #f85149; border: 1px solid #30363d; flex-grow: 0;}
+        
+        .cat-select { padding: 10px; background: #0d1117; color: #FFC107; border: 1px solid #30363d; border-radius: 6px; font-weight: bold; width: 140px;}
 
         .hidden { display: none !important; }
 
@@ -286,9 +312,14 @@
 
         // --- CANVAS TOOLS LOGIC ---
         let areaPoints = [];
-        let countPoints = [];
-        let mode = 'none'; // 'none', 'area', 'count'
+        let countPoints = []; 
+        let scalePoints = []; 
+        let mode = 'none'; 
+        let currentCategory = 'elec'; 
+        let isLoupeEnabled = true; // DEFAULT ON
         let canvas, ctx, bgImage;
+        let mouseX = 0;
+        let mouseY = 0;
 
         function initCanvas(imgDataStr) {
             canvas = document.getElementById('blueprintCanvas');
@@ -302,53 +333,130 @@
             };
             bgImage.src = "data:image/jpeg;base64," + imgDataStr;
 
+            // Track mouse for Loupe
+            canvas.addEventListener('mousemove', function(e) {
+                const rect = canvas.getBoundingClientRect();
+                const scaleX = canvas.width / rect.width;
+                const scaleY = canvas.height / rect.height;
+                mouseX = (e.clientX - rect.left) * scaleX;
+                mouseY = (e.clientY - rect.top) * scaleY;
+                redrawCanvas();
+            });
+
             canvas.addEventListener('mousedown', function(e) {
                 if (mode === 'none') return;
                 
                 const rect = canvas.getBoundingClientRect();
                 const scaleX = canvas.width / rect.width;
                 const scaleY = canvas.height / rect.height;
-
                 const x = (e.clientX - rect.left) * scaleX;
                 const y = (e.clientY - rect.top) * scaleY;
 
                 if (mode === 'area') {
                     areaPoints.push({x: x, y: y});
-                    calcArea(); // Calc math immediately
+                    calcArea(); 
                 } else if (mode === 'count') {
-                    countPoints.push({x: x, y: y});
-                    updateCountDisplay(); // Update count immediately
+                    countPoints.push({x: x, y: y, type: currentCategory});
+                    updateCountDisplay(); 
+                    recalc(); 
+                } else if (mode === 'scale') {
+                    scalePoints.push({x: x, y: y});
+                    if (scalePoints.length === 2) {
+                        redrawCanvas(); 
+                        setTimeout(finalizeScale, 50); 
+                    }
                 }
                 
                 redrawCanvas();
             });
         }
 
+        function finalizeScale() {
+            let ft = prompt("Enter the real-world length of the line you just drew (in Feet):", "3.0");
+            if (ft && !isNaN(ft) && parseFloat(ft) > 0) {
+                let p1 = scalePoints[0];
+                let p2 = scalePoints[1];
+                let distPx = Math.sqrt(Math.pow(p2.x - p1.x, 2) + Math.pow(p2.y - p1.y, 2));
+                let knownFt = parseFloat(ft);
+                let pxPerFt = distPx / knownFt;
+                
+                let rawWidth = parseFloat(document.getElementById('raw_width_store').value);
+                let totalWidthFt = rawWidth / pxPerFt;
+                
+                document.getElementById('real_width_input').value = totalWidthFt.toFixed(2);
+                alert(`✅ Scale Calibrated!\nWe calculated ${pxPerFt.toFixed(2)} pixels per foot.`);
+                recalc(); 
+            } else {
+                alert("Scale calibration cancelled.");
+            }
+            scalePoints = [];
+            setMode('none');
+            redrawCanvas();
+        }
+
         function setMode(newMode) {
-            mode = (mode === newMode) ? 'none' : newMode; // Toggle off if clicked again
-            
-            // UI Updates
+            mode = (mode === newMode) ? 'none' : newMode; 
+            if (mode !== 'scale') scalePoints = [];
+
             document.getElementById('btnAreaMode').classList.remove('active');
             document.getElementById('btnCountMode').classList.remove('active');
+            document.getElementById('btnScaleMode').classList.remove('active');
+            document.getElementById('catSelector').classList.add('hidden'); 
             
+            // Cursor logic
+            if (mode === 'none') canvas.style.cursor = 'default';
+            else if (mode === 'count') canvas.style.cursor = 'crosshair';
+            else canvas.style.cursor = 'none'; // Hide cursor if loupe might be active
+
             if (mode === 'area') document.getElementById('btnAreaMode').classList.add('active');
-            if (mode === 'count') document.getElementById('btnCountMode').classList.add('active');
+            if (mode === 'count') {
+                document.getElementById('btnCountMode').classList.add('active');
+                document.getElementById('catSelector').classList.remove('hidden'); 
+            }
+            if (mode === 'scale') document.getElementById('btnScaleMode').classList.add('active');
+            
+            redrawCanvas();
+        }
+
+        function toggleLoupe() {
+            isLoupeEnabled = !isLoupeEnabled;
+            const btn = document.getElementById('btnLoupeToggle');
+            if (isLoupeEnabled) {
+                btn.classList.add('active');
+                btn.innerText = "🔍 ZOOM: ON";
+            } else {
+                btn.classList.remove('active');
+                btn.innerText = "🔍 ZOOM: OFF";
+                // Restore cursor if we are in a mode that hides it
+                if (mode === 'area' || mode === 'scale') canvas.style.cursor = 'crosshair';
+            }
+            redrawCanvas();
+        }
+
+        function updateCategory() {
+            currentCategory = document.getElementById('catSelector').value;
         }
 
         function clearTools() {
             if(confirm("Clear all drawings and counts?")) {
                 areaPoints = [];
                 countPoints = [];
+                scalePoints = [];
                 mode = 'none';
+                canvas.style.cursor = 'default';
                 document.getElementById('btnAreaMode').classList.remove('active');
                 document.getElementById('btnCountMode').classList.remove('active');
+                document.getElementById('btnScaleMode').classList.remove('active');
+                document.getElementById('catSelector').classList.add('hidden');
                 document.getElementById('display_area').innerText = "---";
                 document.getElementById('display_count').innerText = "---";
                 redrawCanvas();
+                recalc();
             }
         }
 
         function redrawCanvas() {
+            if(!ctx) return;
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             ctx.drawImage(bgImage, 0, 0);
 
@@ -366,7 +474,6 @@
                 ctx.strokeStyle = "#FFC107";
                 ctx.stroke();
 
-                // Vertices
                 ctx.fillStyle = "red";
                 for (let p of areaPoints) {
                     ctx.beginPath();
@@ -376,20 +483,90 @@
             }
 
             // 2. Draw Count Markers
-            ctx.fillStyle = "#00BFFF"; // Deep Sky Blue
-            ctx.strokeStyle = "white";
             ctx.lineWidth = 2;
+            ctx.strokeStyle = "white";
             for (let p of countPoints) {
                 ctx.beginPath();
+                if (p.type === 'elec') ctx.fillStyle = "#00FFFF"; 
+                else if (p.type === 'plumb') ctx.fillStyle = "#FF4500"; 
+                else if (p.type === 'hvac') ctx.fillStyle = "#32CD32"; 
+                else ctx.fillStyle = "#00BFFF"; 
+
                 ctx.arc(p.x, p.y, 10, 0, Math.PI * 2);
                 ctx.fill();
                 ctx.stroke();
+            }
+
+            // 3. Draw Scale Line
+            if (scalePoints.length > 0) {
+                ctx.strokeStyle = "#FF00FF"; 
+                ctx.lineWidth = 4;
+                ctx.beginPath();
+                ctx.moveTo(scalePoints[0].x, scalePoints[0].y);
+                if (scalePoints.length > 1) {
+                    ctx.lineTo(scalePoints[1].x, scalePoints[1].y);
+                }
+                ctx.stroke();
+                ctx.fillStyle = "#FF00FF";
+                for(let p of scalePoints) {
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, 6, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            }
+
+            // 4. DRAW MAGNIFYING GLASS (LOUPE)
+            // Checked against toggle AND mode
+            if (isLoupeEnabled && (mode === 'area' || mode === 'scale')) {
+                // Ensure cursor is hidden so loupe is visible without obstruction
+                canvas.style.cursor = 'none';
+
+                const zoom = 4;
+                const r = 75; // Radius of loupe
+                
+                ctx.save();
+                ctx.beginPath();
+                ctx.arc(mouseX, mouseY, r, 0, Math.PI * 2);
+                ctx.clip();
+                
+                ctx.fillStyle = "white";
+                ctx.fillRect(mouseX - r, mouseY - r, r * 2, r * 2);
+
+                ctx.drawImage(
+                    bgImage, 
+                    mouseX - r/zoom, mouseY - r/zoom, (r*2)/zoom, (r*2)/zoom, 
+                    mouseX - r, mouseY - r, r*2, r*2
+                );
+                
+                ctx.strokeStyle = "#00FFFF"; 
+                ctx.lineWidth = 1;
+                ctx.beginPath();
+                ctx.moveTo(mouseX - 10, mouseY);
+                ctx.lineTo(mouseX + 10, mouseY);
+                ctx.moveTo(mouseX, mouseY - 10);
+                ctx.lineTo(mouseX, mouseY + 10);
+                ctx.stroke();
+
+                ctx.restore();
+
+                ctx.beginPath();
+                ctx.arc(mouseX, mouseY, r, 0, Math.PI * 2);
+                ctx.lineWidth = 3;
+                ctx.strokeStyle = "white";
+                ctx.stroke();
+                ctx.lineWidth = 1;
+                ctx.strokeStyle = "black";
+                ctx.stroke();
+            } else {
+                // If Loupe is OFF but we are in a drawing mode, ensure crosshair is visible
+                if (mode === 'area' || mode === 'scale') {
+                    canvas.style.cursor = 'crosshair';
+                }
             }
         }
 
         function calcArea() {
             if (areaPoints.length < 3) return;
-            // Shoelace Formula
             let areaPx = 0;
             for (let i = 0; i < areaPoints.length; i++) {
                 let j = (i + 1) % areaPoints.length;
@@ -406,16 +583,12 @@
             const areaSqFt = areaPx / (scale * scale);
 
             document.getElementById('display_area').innerText = areaSqFt.toFixed(2) + " sq.ft";
-            
-            // Send to Hidden Input
             document.getElementById('hidden_area').value = areaSqFt.toFixed(2);
         }
 
         function updateCountDisplay() {
             const count = countPoints.length;
-            document.getElementById('display_count').innerText = count + " items";
-            // Send to Hidden Input
-            document.getElementById('hidden_count').value = count;
+            document.getElementById('display_count').innerText = count + " total";
         }
 
         function recalc() {
@@ -431,7 +604,11 @@
 
                 let pricePerSheet = parseFloat(document.getElementById('cost_sheet').value) || 15;
                 let pricePerPaint = parseFloat(document.getElementById('cost_paint').value) || 40;
-                let pricePerItem = parseFloat(document.getElementById('cost_item').value) || 50; 
+                
+                // New Category Costs
+                let costElecUnit = parseFloat(document.getElementById('cost_elec').value) || 5;
+                let costPlumbUnit = parseFloat(document.getElementById('cost_plumb').value) || 150;
+                let costHvacUnit = parseFloat(document.getElementById('cost_hvac').value) || 80;
                 
                 let currencySym = document.getElementById('currency_select').value;
 
@@ -443,9 +620,22 @@
                 const costDrywall = sheets * pricePerSheet;
                 const paint = (totalFeet * 8) / 400;
                 const costPaint = paint * pricePerPaint;
-                const costItems = countPoints.length * pricePerItem; 
                 
-                const totalCost = costDrywall + costPaint + costItems;
+                // Tally Categories
+                let countElec = 0;
+                let countPlumb = 0;
+                let countHvac = 0;
+                
+                for(let p of countPoints) {
+                    if (p.type === 'elec') countElec++;
+                    else if (p.type === 'plumb') countPlumb++;
+                    else if (p.type === 'hvac') countHvac++;
+                }
+
+                const totalCost = costDrywall + costPaint + 
+                                  (countElec * costElecUnit) + 
+                                  (countPlumb * costPlumbUnit) + 
+                                  (countHvac * costHvacUnit);
                 
                 document.getElementById('display_feet').innerText = totalFeet.toFixed(2) + " ft";
                 document.getElementById('display_cost').innerText = currencySym + totalCost.toFixed(2);
@@ -458,7 +648,14 @@
                 document.getElementById('hidden_currency').value = currencySym;
                 document.getElementById('hidden_unit_sheet').value = pricePerSheet;
                 document.getElementById('hidden_unit_paint').value = pricePerPaint;
-                document.getElementById('hidden_unit_item').value = pricePerItem;
+                
+                // Send specific counts and units
+                document.getElementById('hidden_count_elec').value = countElec;
+                document.getElementById('hidden_count_plumb').value = countPlumb;
+                document.getElementById('hidden_count_hvac').value = countHvac;
+                document.getElementById('hidden_unit_elec').value = costElecUnit;
+                document.getElementById('hidden_unit_plumb').value = costPlumbUnit;
+                document.getElementById('hidden_unit_hvac').value = costHvacUnit;
                 
                 checkFreeTrial();
             } catch(e) {}
@@ -546,8 +743,8 @@
                         <div class="info-body">Visual only. Makes the red lines thicker for easier viewing.</div>
                     </div>
                     <div class="info-card" style="grid-column: 1 / -1;">
-                        <div class="info-head"><span class="highlight">🎯</span> Real World Width (Important)</div>
-                        <div class="info-body">After scanning, enter the total width of the image in Feet. The AI uses this to calculate cost.</div>
+                        <div class="info-head"><span class="highlight">🎯</span> Calibration</div>
+                        <div class="info-body">Enter the total image width OR use the <b>'Calibrate Scale'</b> button below to measure a known distance (like a 3ft door) for perfect accuracy.</div>
                     </div>
                 </div>
             </div>
@@ -562,7 +759,7 @@
                         </div>
                         <div>
                             <div class="slider-container"><label class="slider-label">Gap Fill</label><div class="slider-row"><input type="range" id="range_gap" name="gap" min="5" max="100" value="{{ params.gap }}" oninput="syncInputs('range_gap', 'num_gap')"><input type="number" id="num_gap" min="5" max="100" value="{{ params.gap }}" oninput="syncInputs('num_gap', 'range_gap')"></div></div>
-                            <div class="slider-container"><label class="slider-label">Wall Thickness</label><div class="slider-row"><input type="range" id="range_thick" name="thick" min="1" max="10" value="{{ params.thick }}" oninput="syncInputs('range_thick', 'num_thick')"><input type="number" id="num_thick" min="1" max="10" value="{{ params.thick }}" oninput="syncInputs('num_thick', 'range_thick')"></div></div>
+                            <div class="slider-container"><label class="slider-label">Wall Thickness</label><div class="slider-row"><input type="range" id="range_thick" name="thick" min="1" max="10" value="{{ params.thick }}" oninput="syncInputs('range_thick', 'num_thick')"><input type="number" id="num_thick" min="1" max="10" value="{{ params.thick }}" oninput="syncInputs('range_thick', 'num_thick')"></div></div>
                         </div>
                     </div>
                     <hr>
@@ -586,8 +783,17 @@
                         <canvas id="blueprintCanvas" style="width: 100%; border-radius: 8px;"></canvas>
                         
                         <div class="tool-row">
-                            <button id="btnAreaMode" class="btn-tool-toggle" onclick="setMode('area')">📐 AREA (FLOOR)</button>
-                            <button id="btnCountMode" class="btn-tool-toggle" onclick="setMode('count')">👆 COUNT ITEMS</button>
+                            <button id="btnScaleMode" class="btn-tool-toggle" onclick="setMode('scale')">📏 CALIBRATE</button>
+                            <button id="btnAreaMode" class="btn-tool-toggle" onclick="setMode('area')">📐 AREA</button>
+                            
+                            <button id="btnCountMode" class="btn-tool-toggle" onclick="setMode('count')">👆 COUNT</button>
+                            <select id="catSelector" class="cat-select hidden" onchange="updateCategory()">
+                                <option value="elec">⚡ Elec</option>
+                                <option value="plumb">🚿 Plumb</option>
+                                <option value="hvac">❄️ HVAC</option>
+                            </select>
+
+                            <button id="btnLoupeToggle" class="btn-tool-toggle active" onclick="toggleLoupe()">🔍 ZOOM: ON</button>
                             <button class="btn-tool-toggle btn-tool-clear" onclick="clearTools()">🗑️ RESET</button>
                         </div>
                     </div>
@@ -608,9 +814,19 @@
                             </div>
                         </div>
 
-                        <div class="metric-box" style="margin-bottom: 10px;">
-                            <div class="metric-label">COST PER ITEM</div>
-                            <input type="number" id="cost_item" class="calib-input" value="50" oninput="recalc()">
+                        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 2px; margin-bottom: 10px;">
+                            <div class="metric-box-compact">
+                                <div class="metric-label" style="font-size: 10px;">⚡ ELEC</div>
+                                <input type="number" id="cost_elec" class="calib-input-compact" value="5" oninput="recalc()">
+                            </div>
+                            <div class="metric-box-compact">
+                                <div class="metric-label" style="font-size: 10px;">🚿 PLUMB</div>
+                                <input type="number" id="cost_plumb" class="calib-input-compact" value="150" oninput="recalc()">
+                            </div>
+                            <div class="metric-box-compact">
+                                <div class="metric-label" style="font-size: 10px;">❄️ HVAC</div>
+                                <input type="number" id="cost_hvac" class="calib-input-compact" value="80" oninput="recalc()">
+                            </div>
                         </div>
 
                         <div class="metric-box" style="margin-bottom: 10px;">
@@ -639,19 +855,25 @@
                             <input type="hidden" name="final_sheets" id="hidden_sheets">
                             <input type="hidden" name="final_paint" id="hidden_paint">
                             <input type="hidden" name="final_area" id="hidden_area" value="0">
-                            <input type="hidden" name="final_count" id="hidden_count" value="0">
                             
                             <input type="hidden" name="currency_symbol" id="hidden_currency">
                             <input type="hidden" name="unit_price_sheet" id="hidden_unit_sheet">
                             <input type="hidden" name="unit_price_paint" id="hidden_unit_paint">
-                            <input type="hidden" name="unit_price_item" id="hidden_unit_item">
+                            
+                            <input type="hidden" name="count_elec" id="hidden_count_elec" value="0">
+                            <input type="hidden" name="count_plumb" id="hidden_count_plumb" value="0">
+                            <input type="hidden" name="count_hvac" id="hidden_count_hvac" value="0">
+                            
+                            <input type="hidden" name="unit_elec" id="hidden_unit_elec" value="0">
+                            <input type="hidden" name="unit_plumb" id="hidden_unit_plumb" value="0">
+                            <input type="hidden" name="unit_hvac" id="hidden_unit_hvac" value="0">
                             
                             <button type="button" id="btn-free" onclick="useFreeTrial()" class="btn-free">
                                 🎁 UNLOCK FOR FREE (1 TIME ONLY)
                             </button>
 
                             <button type="button" onclick="startPayment()" class="btn-pay">
-                                🔒 UNLOCK & DOWNLOAD (₹199)
+                                Unlock & Download Excel File (199/-)
                             </button>
                         </form>
 
