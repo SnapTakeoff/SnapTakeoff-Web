@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SnapTakeoff Prime</title>
+    <link rel="icon" href="/favicon.ico">
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+
+    <style>
+        /* --- CORE APP LAYOUT --- */
+        * { box-sizing: border-box; }
+        
+        body { 
+            margin: 0; font-family: 'Helvetica Neue', sans-serif; overflow: hidden; 
+            display: flex; flex-direction: column; height: 100vh; background-color: #e5e7eb;
+        }
+
+        /* HEADER */
+        .navbar {
+            height: 50px; background-color: #0a0e17; display: flex; align-items: center;
+            justify-content: space-between; padding: 0 20px; border-bottom: 1px solid #1f2937; flex-shrink: 0; z-index: 20;
+        }
+        .logo { font-size: 20px; font-weight: 800; color: white; text-decoration: none; }
+        .highlight { color: #FFC107; }
+
+        .header-actions { display: flex; gap: 10px; }
+        .header-btn {
+            padding: 6px 12px; border-radius: 4px; font-weight: bold; font-size: 13px; cursor: pointer; border: none;
+        }
+        
+        .btn-trial { 
+            background: transparent; border: 1px solid #FFC107; color: #FFC107; transition: 0.2s; 
+        }
+        .btn-trial:hover { 
+            background: #2563eb; color: white; border-color: #2563eb; 
+        }
+
+        /* UPDATED: Default background is now White */
+        .btn-dl { 
+            background: white; color: #0a0e17; transition: 0.2s; 
+        }
+        .btn-dl:hover { 
+            background: #2563eb; color: white; 
+        }
+
+        /* APP BODY */
+        .app-body { display: flex; flex: 1; overflow: hidden; position: relative; }
+
+        /* LEFT SIDEBAR */
+        .sidebar-left {
+            width: 280px; background-color: #f3f4f6; border-right: 1px solid #d1d5db;
+            display: flex; flex-direction: column; padding: 15px; overflow-y: auto; flex-shrink: 0;
+        }
+        .sidebar-title { font-size: 13px; font-weight: 900; color: #374151; margin-bottom: 10px; text-transform: uppercase; }
+        
+        .config-group { margin-bottom: 15px; border-bottom: 1px solid #e5e7eb; padding-bottom: 10px; }
+        .slider-label { font-size: 11px; font-weight: bold; margin-bottom: 5px; color: #4b5563; display: block; }
+        
+        /* Slider Row Layout */
+        .slider-row { display: flex; align-items: center; gap: 8px; }
+        input[type=range] { 
+            flex-grow: 1; 
+            accent-color: #2563eb; /* Blue Sliders */
+            cursor: pointer; 
+        }
+        input[type=number] { 
+            width: 60px; font-size: 12px; padding: 4px; text-align: center; 
+            border: 1px solid #d1d5db; border-radius: 4px; font-weight: bold;
+        }
+        
+        .file-upload-box {
+            border: 2px dashed #9ca3af; border-radius: 6px; padding: 10px; 
+            text-align: center; cursor: pointer; transition: 0.2s; background: white; font-size: 13px;
+        }
+        .file-upload-box:hover { border-color: #FFC107; background: #fffbeb; }
+        
+        .btn-init {
+            width: 100%; background: #0a0e17; color: #FFC107; font-weight: bold; padding: 10px;
+            border: none; border-radius: 6px; cursor: pointer; margin-top: 5px; margin-bottom: 15px;
+        }
+        .btn-init:hover { background: #1f2937; }
+
+        .waste-box { background: #e5e7eb; padding: 10px; border-radius: 6px; border: 1px solid #d1d5db;}
+
+        /* CENTER WORKSPACE */
+        .workspace-center { flex: 1; display: flex; flex-direction: column; background-color: #374151; position: relative; }
+
+        .ribbon-toolbar {
+            height: 40px; background-color: #FFC107; display: flex; align-items: center; padding: 0 10px; gap: 5px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2); flex-shrink: 0;
+        }
+        
+        .ribbon-btn {
+            background: white; border: 1px solid #d1d5db; color: #0a0e17;
+            padding: 4px 8px; border-radius: 4px; font-weight: bold; font-size: 12px; cursor: pointer;
+            display: flex; flex-direction: row; align-items: center; gap: 6px; transition: 0.2s;
+        }
+        .ribbon-btn span { font-size: 14px; }
+        .ribbon-btn:hover { background: #f3f4f6; } 
+        
+        .ribbon-btn.active { 
+            background: #2563eb; color: white; border-color: #2563eb; 
+        }
+        
+        .ribbon-sep { width: 1px; height: 25px; background: rgba(0,0,0,0.2); margin: 0 2px; }
+        .cat-select-ribbon { padding: 3px; font-size: 11px; border-radius: 4px; border: 1px solid #0a0e17; font-weight: bold; }
+
+        .canvas-container {
+            flex: 1; overflow: auto; display: flex; align-items: center; justify-content: center;
+            background: #1f2937; padding: 10px;
+        }
+        canvas { 
+            box-shadow: 0 0 20px rgba(0,0,0,0.5); background: white; 
+            max-width: 100%; max-height: 100%; object-fit: contain;
+        }
+
+        /* RIGHT SIDEBAR */
+        .sidebar-right {
+            width: 250px; 
+            background: white; 
+            border-left: 1px solid #d1d5db; 
+            transition: width 0.3s ease; 
+            display: flex; 
+            flex-direction: column; 
+            position: relative; 
+            flex-shrink: 0;
+            z-index: 50;
+        }
+        .sidebar-right.collapsed { width: 0; border-left: none; }
+        
+        .guide-content { 
+            padding: 20px; overflow-y: auto; flex: 1; width: 250px; background: white;
+        }
+        .sidebar-right.collapsed .guide-content { display: none; }
+
+        .guide-item { 
+            margin-bottom: 12px; font-size: 12px; color: #6b7280; line-height: 1.5; 
+            border-bottom: 1px solid #f3f4f6; padding-bottom: 10px; word-wrap: break-word; 
+        }
+        .guide-item b { display: block; color: #1f2937; margin-bottom: 4px; font-size: 13px; }
+        
+        .toggle-guide-btn {
+            position: absolute; left: -20px; top: 50%; width: 20px; height: 40px; 
+            background: white; border: 1px solid #d1d5db; border-right: none; border-radius: 4px 0 0 4px; 
+            cursor: pointer; display: flex; align-items: center; justify-content: center; 
+            font-size: 12px; font-weight: bold; z-index: 60; color: #1f2937;
+        }
+
+        /* FOOTER */
+        .footer-bar {
+            height: 70px; background-color: #0a0e17; color: white; display: flex; align-items: center;
+            justify-content: center; gap: 30px; padding: 0 20px; border-top: 1px solid #374151; flex-shrink: 0; z-index: 30;
+        }
+
+        .footer-group { display: flex; gap: 10px; align-items: center; }
+        
+        .metric-mini {
+            background: #1f2937; padding: 5px 10px; border-radius: 4px; border: 1px solid #374151; text-align: center;
+        }
+        .metric-mini label { display: block; font-size: 9px; color: #9ca3af; margin-bottom: 2px; }
+        .metric-mini .val { font-size: 14px; font-weight: bold; color: #FFC107; font-family: monospace; }
+        .input-mini {
+            background: #0d1117; border: 1px solid #30363d; color: white; 
+            width: 50px; padding: 3px; text-align: center; font-size: 12px; font-weight: bold; border-radius: 4px;
+        }
+
+        .hidden { display: none !important; }
+        .active-project-chips { 
+            position: absolute; bottom: 10px; left: 20px; right: 20px; 
+            display: flex; gap: 5px; flex-wrap: wrap; pointer-events: none;
+        }
+        .room-chip { pointer-events: auto; background: rgba(50, 205, 50, 0.9); color: white; padding: 4px 8px; border-radius: 12px; font-size: 11px; font-weight: bold; display: flex; align-items: center; gap: 5px; box-shadow: 0 2px 4px rgba(0,0,0,0.3);}
+        .room-chip .del-btn { cursor: pointer; font-weight: 900; }
+
+        .loading-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(10, 14, 23, 0.95);
+            z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #FFC107;
+        }
+        .spinner {
+            border: 6px solid #30363d; border-top: 6px solid #FFC107; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin-bottom: 20px;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
+    
+    <script>
+        function syncInputs(sourceId, targetId) { document.getElementById(targetId).value = document.getElementById(sourceId).value; }
+        
+        function updateFileName(input) {
+            if (input.files && input.files.length > 0) {
+                document.getElementById('file-label').innerText = "📄 " + input.files[0].name;
+            }
+        }
+
+        function toggleRightPanel() { 
+            const panel = document.getElementById('rightPanel');
+            const btn = document.getElementById('toggleBtn');
+            panel.classList.toggle('collapsed');
+            if(panel.classList.contains('collapsed')) { btn.innerText = "<"; } else { btn.innerText = ">"; }
+        }
+        
+        function showLoading() { document.getElementById('loading-overlay').classList.remove('hidden'); }
+
+        function checkFreeTrial() {
+            const used = localStorage.getItem('snaptakeoff_trial_used');
+            if (used) { const btn = document.getElementById('btn-free-trial'); if(btn) btn.classList.add('hidden'); }
+        }
+
+        function useFreeTrial() {
+            if(confirm("🎁 Use your 1-time FREE UNLOCK now?")) {
+                localStorage.setItem('snaptakeoff_trial_used', 'true'); document.getElementById('download_form').submit();
+            }
+        }
+
+        function startPayment() {
+            var options = {
+                "key": "rzp_test_YOUR_KEY_HERE", "amount": "19900", "currency": "INR", "name": "SnapTakeoff Pro", "description": "Unlock Excel Estimate", "image": "/favicon.ico", "theme": { "color": "#FFC107" }, "handler": function (response){ document.getElementById('download_form').submit(); }
+            }; var rzp1 = new Razorpay(options); rzp1.open(); return false;
+        }
+
+        let areaPoints = []; let savedAreas = []; let countPoints = []; let scalePoints = []; let measurePoints = [];
+        let mode = 'none'; let currentCategory = 'elec'; let isLoupeEnabled = true; 
+        let canvas, ctx, bgImage; let mouseX = 0, mouseY = 0;
+        let currentZoom = 1.0; let isPanning = false; let startPanX = 0, startPanY = 0;
+
+        function initCanvas(imgDataStr) {
+            canvas = document.getElementById('blueprintCanvas');
+            ctx = canvas.getContext('2d');
+            bgImage = new Image();
+            bgImage.onload = function() {
+                canvas.width = bgImage.width; canvas.height = bgImage.height; redrawCanvas();
+                setZoom('fit');
+            };
+            bgImage.src = "data:image/jpeg;base64," + imgDataStr;
+
+            canvas.addEventListener('mousemove', function(e) {
+                if(mode === 'pan' && isPanning) {
+                    const container = document.querySelector('.canvas-container');
+                    container.scrollLeft = startPanX - e.clientX; container.scrollTop = startPanY - e.clientY; return;
+                }
+                const rect = canvas.getBoundingClientRect();
+                const scaleX = canvas.width / rect.width; const scaleY = canvas.height / rect.height;
+                mouseX = (e.clientX - rect.left) * scaleX; mouseY = (e.clientY - rect.top) * scaleY;
+                redrawCanvas();
+            });
+
+            canvas.addEventListener('mousedown', function(e) {
+                if (mode === 'pan') {
+                    isPanning = true; const container = document.querySelector('.canvas-container');
+                    startPanX = container.scrollLeft + e.clientX; startPanY = container.scrollTop + e.clientY;
+                    canvas.style.cursor = 'grabbing'; return;
+                }
+                if (mode === 'none') return;
+                const rect = canvas.getBoundingClientRect();
+                const scaleX = canvas.width / rect.width; const scaleY = canvas.height / rect.height;
+                const x = (e.clientX - rect.left) * scaleX; const y = (e.clientY - rect.top) * scaleY;
+
+                if (mode === 'area') { areaPoints.push({x, y}); calcArea(); } 
+                else if (mode === 'count') { countPoints.push({x, y, type: currentCategory}); updateCountDisplay(); recalc(); } 
+                else if (mode === 'scale') { scalePoints.push({x, y}); if (scalePoints.length === 2) { redrawCanvas(); setTimeout(finalizeScale, 50); } } 
+                else if (mode === 'measure') { measurePoints.push({x, y}); redrawCanvas(); }
+                redrawCanvas();
+            });
+
+            canvas.addEventListener('mouseup', function() { if (mode === 'pan') { isPanning = false; canvas.style.cursor = 'grab'; } });
+            canvas.addEventListener('mouseleave', function() { isPanning = false; });
+        }
+
+        function setZoom(val) {
+            if(!canvas) return;
+            if(val === 'fit') {
+                canvas.style.maxWidth = '100%'; canvas.style.maxHeight = '100%';
+                canvas.style.width = 'auto'; canvas.style.height = 'auto';
+            } else {
+                const scale = parseFloat(val);
+                const newWidth = canvas.width * scale;
+                canvas.style.maxWidth = 'none'; canvas.style.maxHeight = 'none';
+                canvas.style.width = newWidth + 'px'; canvas.style.height = 'auto'; 
+            }
+        }
+
+        function setMode(newMode) {
+            mode = (mode === newMode) ? 'none' : newMode; 
+            if (mode !== 'scale') scalePoints = [];
+            ['btnScaleMode','btnAreaMode','btnCountMode','btnMeasureMode','btnSaveArea','btnPanMode'].forEach(id => { const el = document.getElementById(id); if(el) el.classList.remove('active'); });
+            document.getElementById('catSelector').classList.add('hidden'); document.getElementById('btnSaveArea').classList.add('hidden'); 
+
+            if (mode === 'none') canvas.style.cursor = 'default'; else canvas.style.cursor = 'crosshair';
+
+            if (mode === 'area') { document.getElementById('btnAreaMode').classList.add('active'); document.getElementById('btnSaveArea').classList.remove('hidden'); }
+            if (mode === 'count') { document.getElementById('btnCountMode').classList.add('active'); document.getElementById('catSelector').classList.remove('hidden'); }
+            if (mode === 'scale') document.getElementById('btnScaleMode').classList.add('active');
+            if (mode === 'measure') document.getElementById('btnMeasureMode').classList.add('active');
+            if (mode === 'pan') { document.getElementById('btnPanMode').classList.add('active'); canvas.style.cursor = 'grab'; }
+            redrawCanvas();
+        }
+
+        function finalizeScale() {
+            let ft = prompt("Enter real-world length (Feet):", "3.0");
+            if (ft && !isNaN(ft) && parseFloat(ft) > 0) {
+                let p1 = scalePoints[0], p2 = scalePoints[1];
+                let distPx = Math.sqrt(Math.pow(p2.x - p1.x, 2) + Math.pow(p2.y - p1.y, 2));
+                let pxPerFt = distPx / parseFloat(ft);
+                let rawWidth = parseFloat(document.getElementById('raw_width_store').value);
+                document.getElementById('real_width_input').value = (rawWidth / pxPerFt).toFixed(2);
+                alert("Scale Calibrated!"); recalc(); 
+            }
+            scalePoints = []; setMode('none'); redrawCanvas();
+        }
+        function saveCurrentArea() {
+            if(areaPoints.length < 3) return alert("Draw area first.");
+            let name = prompt("Area Name:", "Room " + (savedAreas.length + 1));
+            if(name) { savedAreas.push({ name: name, points: [...areaPoints] }); areaPoints = []; renderRoomList(); recalc(); redrawCanvas(); }
+        }
+        function undoAction() {
+            if (mode === 'area' && areaPoints.length > 0) { areaPoints.pop(); calcArea(); } 
+            else if (mode === 'count' && countPoints.length > 0) { countPoints.pop(); updateCountDisplay(); recalc(); } 
+            else if (mode === 'measure' && measurePoints.length > 0) { measurePoints.pop(); } 
+            redrawCanvas();
+        }
+        function clearTools() { if(confirm("Clear All?")) { areaPoints=[]; savedAreas=[]; countPoints=[]; scalePoints=[]; measurePoints=[]; setMode('none'); renderRoomList(); redrawCanvas(); recalc(); } }
+        function downloadCanvas() { var link = document.createElement('a'); link.download = 'SnapTakeoff.png'; link.href = canvas.toDataURL("image/png"); link.click(); }
+        function toggleLoupe() { isLoupeEnabled = !isLoupeEnabled; document.getElementById('btnLoupeToggle').classList.toggle('active'); redrawCanvas(); }
+        function renderRoomList() {
+            const container = document.getElementById('roomListOverlay'); container.innerHTML = "";
+            savedAreas.forEach((room, index) => {
+                const chip = document.createElement('div'); chip.className = 'room-chip';
+                chip.innerHTML = `<span>${room.name}</span> <span class="del-btn" onclick="deleteRoom(${index})">×</span>`;
+                container.appendChild(chip);
+            });
+        }
+        function deleteRoom(i) { savedAreas.splice(i, 1); renderRoomList(); recalc(); redrawCanvas(); }
+
+        function redrawCanvas() {
+            if(!ctx) return;
+            ctx.clearRect(0, 0, canvas.width, canvas.height); ctx.drawImage(bgImage, 0, 0);
+
+            for(let room of savedAreas) {
+                if(room.points.length > 0) {
+                    ctx.beginPath(); ctx.moveTo(room.points[0].x, room.points[0].y);
+                    for(let i=1; i<room.points.length; i++) ctx.lineTo(room.points[i].x, room.points[i].y);
+                    ctx.closePath(); ctx.fillStyle = "rgba(50, 205, 50, 0.4)"; ctx.fill();
+                    ctx.lineWidth = 2; ctx.strokeStyle = "#32CD32"; ctx.stroke();
+                    let cx=0, cy=0; room.points.forEach(p=>{cx+=p.x; cy+=p.y;}); cx/=room.points.length; cy/=room.points.length;
+                    ctx.fillStyle = "white"; ctx.font = "bold 20px Arial"; ctx.strokeStyle="black"; ctx.lineWidth=3;
+                    ctx.strokeText(room.name, cx-20, cy); ctx.fillText(room.name, cx-20, cy);
+                }
+            }
+            if (areaPoints.length > 0) {
+                ctx.beginPath(); ctx.moveTo(areaPoints[0].x, areaPoints[0].y);
+                for (let i=1; i<areaPoints.length; i++) ctx.lineTo(areaPoints[i].x, areaPoints[i].y);
+                ctx.closePath(); ctx.fillStyle = "rgba(255, 193, 7, 0.3)"; ctx.fill();
+                ctx.lineWidth = 4; ctx.strokeStyle = "#FFC107"; ctx.stroke();
+                ctx.fillStyle = "red"; areaPoints.forEach(p => { ctx.beginPath(); ctx.arc(p.x, p.y, 6, 0, Math.PI*2); ctx.fill(); });
+            }
+            ctx.lineWidth = 2; ctx.strokeStyle = "white";
+            countPoints.forEach(p => {
+                ctx.beginPath(); ctx.fillStyle = p.type === 'elec' ? "#00FFFF" : (p.type === 'plumb' ? "#FF4500" : "#32CD32");
+                ctx.arc(p.x, p.y, 10, 0, Math.PI*2); ctx.fill(); ctx.stroke();
+            });
+            if(scalePoints.length > 0) {
+                ctx.strokeStyle = "#FF00FF"; ctx.lineWidth = 4; ctx.beginPath(); ctx.moveTo(scalePoints[0].x, scalePoints[0].y);
+                if(scalePoints[1]) ctx.lineTo(scalePoints[1].x, scalePoints[1].y); ctx.stroke();
+            }
+            const rawWidth = parseFloat(document.getElementById('raw_width_store').value || 1);
+            let realFt = parseFloat(document.getElementById('real_width_input').value || 1);
+            const scale = rawWidth / realFt;
+            for (let i=0; i<measurePoints.length; i+=2) {
+                if (i+1 < measurePoints.length) {
+                    let p1 = measurePoints[i], p2 = measurePoints[i+1];
+                    ctx.strokeStyle = "#FFA500"; ctx.lineWidth = 3; ctx.setLineDash([10, 5]);
+                    ctx.beginPath(); ctx.moveTo(p1.x, p1.y); ctx.lineTo(p2.x, p2.y); ctx.stroke(); ctx.setLineDash([]);
+                    let dist = (Math.sqrt(Math.pow(p2.x-p1.x, 2) + Math.pow(p2.y-p1.y, 2)) / scale).toFixed(2) + " ft";
+                    let mx = (p1.x+p2.x)/2, my = (p1.y+p2.y)/2;
+                    ctx.fillStyle="black"; ctx.fillRect(mx-110, my-30, 220, 60);
+                    ctx.fillStyle="#FFA500"; ctx.font="bold 40px monospace"; ctx.textAlign="center"; ctx.textBaseline="middle"; ctx.fillText(dist, mx, my);
+                } else {
+                    ctx.fillStyle = "#FFA500"; ctx.beginPath(); ctx.arc(measurePoints[i].x, measurePoints[i].y, 5, 0, Math.PI*2); ctx.fill();
+                }
+            }
+            if (isLoupeEnabled && mode !== 'none' && mode !== 'pan') {
+                const r = 75, zoom = 4;
+                ctx.save(); ctx.beginPath(); ctx.arc(mouseX, mouseY, r, 0, Math.PI*2); ctx.clip();
+                ctx.fillStyle = "white"; ctx.fillRect(mouseX-r, mouseY-r, r*2, r*2);
+                ctx.drawImage(bgImage, mouseX-r/zoom, mouseY-r/zoom, (r*2)/zoom, (r*2)/zoom, mouseX-r, mouseY-r, r*2, r*2);
+                ctx.strokeStyle = "#00FFFF"; ctx.lineWidth=1; ctx.beginPath(); ctx.moveTo(mouseX-10, mouseY); ctx.lineTo(mouseX+10, mouseY); ctx.moveTo(mouseX, mouseY-10); ctx.lineTo(mouseX, mouseY+10); ctx.stroke(); ctx.restore();
+                ctx.beginPath(); ctx.arc(mouseX, mouseY, r, 0, Math.PI*2); ctx.lineWidth=3; ctx.strokeStyle="white"; ctx.stroke();
+            }
+        }
+
+        function getPolyArea(points) {
+            if(points.length<3) return 0; let area=0; for(let i=0; i<points.length; i++) { let j=(i+1)%points.length; area += points[i].x*points[j].y; area -= points[j].x*points[i].y; } return Math.abs(area)/2;
+        }
+        function updateCountDisplay() {}
+        function recalc() {
+            try {
+                document.getElementById('disp_count').innerText = countPoints.length;
+                const rawWidth = parseFloat(document.getElementById('raw_width_store').value);
+                let realFt = parseFloat(document.getElementById('real_width_input').value) || 1;
+                const scale = rawWidth / realFt;
+                
+                let totalSqFt = 0; let breakdown = [];
+                for(let r of savedAreas) { let ft = getPolyArea(r.points) / (scale*scale); totalSqFt += ft; breakdown.push({name: r.name, sqft: ft.toFixed(2)}); }
+                let currentFt = getPolyArea(areaPoints) / (scale*scale); totalSqFt += currentFt;
+                
+                document.getElementById('disp_area').innerText = totalSqFt.toFixed(2);
+                document.getElementById('hidden_area').value = totalSqFt.toFixed(2);
+                document.getElementById('hidden_area_breakdown').value = JSON.stringify(breakdown);
+
+                const rawPixels = parseFloat(document.getElementById('raw_pixels_store').value);
+                const totalLinearFt = rawPixels / scale;
+                document.getElementById('disp_feet').innerText = totalLinearFt.toFixed(2);
+
+                let wasteVal = document.getElementById('waste_slider').value;
+                let waste = 1 + (parseFloat(wasteVal)/100);
+                document.getElementById('disp_waste').innerText = wasteVal + "%";
+
+                let pSheet = parseFloat(document.getElementById('cost_sheet').value) || 0;
+                let pPaint = parseFloat(document.getElementById('cost_paint').value) || 0;
+                let sheets = ((totalLinearFt * 8) / 32) * waste;
+                let paint = ((totalLinearFt * 8) / 400) * waste;
+                
+                let cElec = parseFloat(document.getElementById('cost_elec').value) || 0;
+                let cPlumb = parseFloat(document.getElementById('cost_plumb').value) || 0;
+                let cHvac = parseFloat(document.getElementById('cost_hvac').value) || 0;
+                let nElec=0, nPlumb=0, nHvac=0;
+                countPoints.forEach(p => { if(p.type==='elec') nElec++; else if(p.type==='plumb') nPlumb++; else nHvac++; });
+
+                let totalCost = (sheets*pSheet) + (paint*pPaint) + (nElec*cElec) + (nPlumb*cPlumb) + (nHvac*cHvac);
+                
+                // --- CURRENCY UPDATE LOGIC ---
+                let cur = document.getElementById('currency_select').value;
+                
+                // Update Labels
+                document.getElementById('lbl_sheet').innerText = "Sheet " + cur;
+                document.getElementById('lbl_paint').innerText = "Paint " + cur;
+                
+                // Update Total Display
+                document.getElementById('disp_cost').innerText = cur + totalCost.toFixed(2);
+
+                // Update Hidden Inputs
+                document.getElementById('hidden_currency').value = cur;
+                document.getElementById('hidden_feet').value = totalLinearFt.toFixed(2);
+                document.getElementById('hidden_cost').value = totalCost.toFixed(2);
+                document.getElementById('hidden_sheets').value = sheets;
+                document.getElementById('hidden_paint').value = paint;
+                document.getElementById('hidden_count_elec').value = nElec;
+                document.getElementById('hidden_count_plumb').value = nPlumb;
+                document.getElementById('hidden_count_hvac').value = nHvac;
+                document.getElementById('hidden_waste_percent').value = wasteVal;
+
+                checkFreeTrial();
+            } catch(e) {}
+        }
+    </script>
+</head>
+<body onload="checkFreeTrial()">
+
+    <div id="loading-overlay" class="loading-overlay hidden">
+        <div class="spinner"></div>
+        <h2 style="font-family: monospace;">PROCESSING...</h2>
+    </div>
+
+    <div class="navbar">
+        <a href="/" class="logo">Snap<span class="highlight">Takeoff</span></a>
+        {% if result %}
+        <div class="header-actions">
+            <form id="download_form" action="/download_report" method="post" style="display:flex; gap:10px;">
+                <input type="hidden" name="final_feet" id="hidden_feet"><input type="hidden" name="final_cost" id="hidden_cost">
+                <input type="hidden" name="final_sheets" id="hidden_sheets"><input type="hidden" name="final_paint" id="hidden_paint">
+                <input type="hidden" name="final_area" id="hidden_area"><input type="hidden" name="area_breakdown" id="hidden_area_breakdown">
+                <input type="hidden" name="currency_symbol" id="hidden_currency"><input type="hidden" name="unit_price_sheet" id="hidden_unit_sheet">
+                <input type="hidden" name="unit_price_paint" id="hidden_unit_paint"><input type="hidden" name="count_elec" id="hidden_count_elec">
+                <input type="hidden" name="count_plumb" id="hidden_count_plumb"><input type="hidden" name="count_hvac" id="hidden_count_hvac">
+                <input type="hidden" name="waste_percent" id="hidden_waste_percent">
+
+                <button type="button" id="btn-free-trial" onclick="useFreeTrial()" class="header-btn btn-trial">🎁 Free Trial</button>
+                <button type="button" onclick="startPayment()" class="header-btn btn-dl">🔓 Download Excel (199/-)</button>
+            </form>
+        </div>
+        {% endif %}
+    </div>
+
+    
+    <div class="app-body">
+        
+        <div class="sidebar-left">
+            <div class="sidebar-title">// CONFIGURATION</div>
+            <form action="/tool" method="post" enctype="multipart/form-data" onsubmit="showLoading()">
+                <div class="config-group">
+                    <label class="slider-label" style="margin-bottom:5px;">Select Blueprint</label>
+                    <input type="file" name="file" accept="image/*,.pdf" required style="font-size: 12px; width: 100%;">
+                </div>
+                
+                <div class="config-group">
+                    <div class="slider-label">Sensitivity</div>
+                    <div class="slider-row">
+                        <input type="range" id="range_thresh" name="thresh" min="20" max="200" value="{{ params.thresh }}" oninput="syncInputs('range_thresh', 'num_thresh')">
+                        <input type="number" id="num_thresh" value="{{ params.thresh }}" oninput="syncInputs('num_thresh', 'range_thresh')">
+                    </div>
+                </div>
+
+                <div class="config-group">
+                    <div class="slider-label">Gap Fill</div>
+                    <div class="slider-row">
+                        <input type="range" id="range_gap" name="gap" min="5" max="100" value="{{ params.gap }}" oninput="syncInputs('range_gap', 'num_gap')">
+                        <input type="number" id="num_gap" value="{{ params.gap }}" oninput="syncInputs('num_gap', 'range_gap')">
+                    </div>
+                </div>
+
+                <div class="config-group">
+                    <div class="slider-label">Min Wall Length</div>
+                    <div class="slider-row">
+                        <input type="range" id="range_len" name="min_len" min="50" max="500" value="{{ params.min_len }}" oninput="syncInputs('range_len', 'num_len')">
+                        <input type="number" id="num_len" value="{{ params.min_len }}" oninput="syncInputs('num_len', 'range_len')">
+                    </div>
+                </div>
+
+                <div class="config-group">
+                    <div class="slider-label">Wall Thickness</div>
+                    <div class="slider-row">
+                        <input type="range" id="range_thick" name="thick" min="1" max="10" value="{{ params.thick }}" oninput="syncInputs('range_thick', 'num_thick')">
+                        <input type="number" id="num_thick" value="{{ params.thick }}" oninput="syncInputs('num_thick', 'range_thick')">
+                    </div>
+                </div>
+
+                <button type="submit" class="btn-init">INITIATE SCAN</button>
+            </form>
+            {% if result %}
+            <div class="sidebar-title" style="margin-top:20px;">// MATERIAL WASTE</div>
+            <div class="waste-box"><div class="slider-label" style="font-size:12px; color:#1f2937;"><span>Add Waste %</span> <span id="disp_waste" style="color:#b48a00; font-weight:900;">0%</span></div><input type="range" id="waste_slider" min="0" max="20" step="5" value="0" oninput="recalc()"></div>
+            {% endif %}
+        </div>
+
+        <div class="workspace-center">
+            {% if result %}
+            <input type="hidden" id="raw_pixels_store" value="{{ raw_pixels }}">
+            <input type="hidden" id="raw_width_store" value="{{ raw_width }}">
+
+            <div class="ribbon-toolbar">
+                <button class="ribbon-btn" id="btnScaleMode" onclick="setMode('scale')"><span>📏</span> Scale</button>
+                <div class="ribbon-sep"></div>
+                <button class="ribbon-btn" id="btnAreaMode" onclick="setMode('area')"><span>📐</span> Area</button>
+                <button class="ribbon-btn hidden" id="btnSaveArea" onclick="saveCurrentArea()" style="background:#2ea043; color:white; padding:4px 8px;">💾 Save</button>
+                <div class="ribbon-sep"></div>
+                <button class="ribbon-btn" id="btnCountMode" onclick="setMode('count')"><span>👆</span> Count</button>
+                <select id="catSelector" class="cat-select-ribbon hidden" onchange="currentCategory=this.value"><option value="elec">⚡ Elec</option><option value="plumb">🚿 Plumb</option><option value="hvac">❄️ HVAC</option></select>
+                <div class="ribbon-sep"></div>
+                <button class="ribbon-btn" id="btnMeasureMode" onclick="setMode('measure')"><span>📏</span> Tape</button>
+                <div class="ribbon-sep"></div>
+                
+                <button class="ribbon-btn" id="btnPanMode" onclick="setMode('pan')"><span>✋</span> Pan</button>
+                
+                <select class="cat-select-ribbon" onchange="setZoom(this.value)" style="margin-left:5px;">
+                    <option value="fit">Fit</option>
+                    <option value="0.1">10%</option>
+                    <option value="0.25">25%</option>
+                    <option value="0.5">50%</option>
+                    <option value="0.75">75%</option>
+                    <option value="1.0" selected>100% (Actual)</option>
+                    <option value="1.5">150%</option>
+                    <option value="2.0">200%</option>
+                    <option value="3.0">300%</option>
+                    <option value="4.0">400%</option>
+                </select>
+                
+                <div class="ribbon-sep"></div>
+                <button class="ribbon-btn active" id="btnLoupeToggle" onclick="toggleLoupe()"><span>🔍</span> Zoom</button>
+                <button class="ribbon-btn" onclick="undoAction()"><span>↩️</span> Undo</button>
+                <button class="ribbon-btn" onclick="clearTools()" style="color:#d32f2f;"><span>🗑️</span> Reset</button>
+                <button class="ribbon-btn" onclick="downloadCanvas()"><span>📷</span> Img</button>
+            </div>
+
+            <div class="canvas-container">
+                <div style="position: relative; width:100%; height:100%; display:flex; justify-content:center; align-items:center;">
+                    <canvas id="blueprintCanvas"></canvas>
+                    <div id="roomListOverlay" class="active-project-chips"></div>
+                </div>
+            </div>
+            
+            <script>initCanvas("{{ image_data }}"); setTimeout(recalc, 500);</script>
+            {% else %}
+            <div style="flex:1; display:flex; align-items:center; justify-content:center; color: #9ca3af; flex-direction:column;">
+                <div style="font-size:50px; margin-bottom:20px;">📂</div>
+                <h2>Upload a blueprint to start</h2>
+            </div>
+            {% endif %}
+        </div>
+
+        <div class="sidebar-right" id="rightPanel">
+            <button class="toggle-guide-btn" id="toggleBtn" onclick="toggleRightPanel()">></button>
+            <div class="guide-content">
+                <div class="sidebar-title">Controls Guide</div>
+                <div class="guide-item"><b>📏 Calibrate Scale</b> First step. Draw a line over a known dimension (e.g., a door) and enter '3.0'.</div>
+                <div class="guide-item"><b>📐 Area Tool</b> Click corners of a room. Click 'Save' when done.</div>
+                <div class="guide-item"><b>👆 Count Tool</b> Click items to tally them. Change category in dropdown.</div>
+                <div class="guide-item"><b>📏 Tape Tool</b> Click 2 points to measure distance temporarily.</div>
+                <div class="guide-item"><b>✋ Pan Tool</b> Select to drag blueprint around.</div>
+                <div class="guide-item"><b>🔍 Zoom</b> Use dropdown or scroll.</div>
+            </div>
+        </div>
+
+    </div>
+
+    {% if result %}
+    <div class="footer-bar">
+        <div class="footer-group">
+            <div class="metric-mini"><label>Width (ft)</label><input type="number" id="real_width_input" class="input-mini" value="50" oninput="recalc()"></div>
+            <div class="metric-mini"><label id="lbl_sheet">Sheet $</label><input type="number" id="cost_sheet" class="input-mini" value="15" oninput="recalc()"></div>
+            <div class="metric-mini"><label id="lbl_paint">Paint $</label><input type="number" id="cost_paint" class="input-mini" value="40" oninput="recalc()"></div>
+             
+             <input type="hidden" id="cost_elec" value="5"><input type="hidden" id="cost_plumb" value="150"><input type="hidden" id="cost_hvac" value="80">
+            <select id="currency_select" class="input-mini" onchange="recalc()" style="width:80px; border-color:#FFC107; color:#FFC107;">
+                <option value="$">USD ($)</option>
+                <option value="₹">INR (₹)</option>
+                <option value="€">EUR (€)</option>
+                <option value="£">GBP (£)</option>
+                <option value="C$">CAD (C$)</option>
+                <option value="A$">AUD (A$)</option>
+                <option value="¥">JPY (¥)</option>
+            </select>
+        </div>
+        <div class="footer-group" style="gap:20px;">
+            <div class="metric-mini" style="border:none; background:transparent; text-align:left;"><label>TOTAL FEET</label><div class="val" id="disp_feet" style="font-size:18px;">---</div></div>
+            <div class="metric-mini" style="border:none; background:transparent; text-align:left;"><label>TOTAL SQ.FT</label><div class="val" id="disp_area" style="font-size:18px;">---</div></div>
+            <div class="metric-mini" style="border:none; background:transparent; text-align:left;"><label>COUNT</label><div class="val" id="disp_count" style="font-size:18px;">0</div></div>
+            <div class="metric-mini" style="border: 2px solid #FFC107; padding: 5px 15px;"><label style="color:#FFC107;">ESTIMATE</label><div class="val" id="disp_cost" style="font-size:22px;">---</div></div>
+        </div>
+    </div>
+    {% endif %}
+
+</body>
+</html>
