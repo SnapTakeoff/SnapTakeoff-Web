@@ -24,11 +24,16 @@
         .logo { font-size: 20px; font-weight: 800; color: white; text-decoration: none; }
         .highlight { color: #FFC107; }
 
-        .header-actions { display: flex; gap: 10px; }
+        .header-actions { display: flex; gap: 10px; align-items: center; }
         .header-btn {
             padding: 6px 12px; border-radius: 4px; font-weight: bold; font-size: 13px; cursor: pointer; border: none;
         }
         
+        .btn-guide {
+            background: #374151; color: white; border: 1px solid #4b5563; transition: 0.2s;
+        }
+        .btn-guide:hover { background: #4b5563; }
+
         .btn-trial { 
             background: transparent; border: 1px solid #FFC107; color: #FFC107; transition: 0.2s; 
         }
@@ -36,7 +41,6 @@
             background: #2563eb; color: white; border-color: #2563eb; 
         }
 
-        /* UPDATED: Default background is now White */
         .btn-dl { 
             background: white; color: #0a0e17; transition: 0.2s; 
         }
@@ -61,7 +65,7 @@
         .slider-row { display: flex; align-items: center; gap: 8px; }
         input[type=range] { 
             flex-grow: 1; 
-            accent-color: #2563eb; /* Blue Sliders */
+            accent-color: #2563eb; 
             cursor: pointer; 
         }
         input[type=number] { 
@@ -84,68 +88,89 @@
         .waste-box { background: #e5e7eb; padding: 10px; border-radius: 6px; border: 1px solid #d1d5db;}
 
         /* CENTER WORKSPACE */
-        .workspace-center { flex: 1; display: flex; flex-direction: column; background-color: #374151; position: relative; }
+        .workspace-center { flex: 1; display: flex; flex-direction: column; background-color: #374151; position: relative; min-width: 0; }
 
-        .ribbon-toolbar {
-            height: 40px; background-color: #FFC107; display: flex; align-items: center; padding: 0 10px; gap: 5px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.2); flex-shrink: 0;
+        /* SCROLLABLE RIBBON */
+        .ribbon-wrapper {
+            height: 40px; 
+            background-color: #FFC107; 
+            display: flex; 
+            align-items: center; 
+            padding: 0 5px; 
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2); 
+            flex-shrink: 0;
         }
+
+        .ribbon-scroll-btn {
+            background: rgba(0,0,0,0.1); border: none; cursor: pointer;
+            width: 25px; height: 30px; display: flex; align-items: center; justify-content: center;
+            border-radius: 4px; color: #0a0e17; font-weight: bold; flex-shrink: 0; user-select: none;
+        }
+        .ribbon-scroll-btn:hover { background: rgba(0,0,0,0.2); }
+
+        .ribbon-content {
+            flex-grow: 1; display: flex; align-items: center; gap: 5px;
+            overflow-x: auto; scrollbar-width: none; margin: 0 5px; white-space: nowrap;
+        }
+        .ribbon-content::-webkit-scrollbar { display: none; }
         
         .ribbon-btn {
             background: white; border: 1px solid #d1d5db; color: #0a0e17;
             padding: 4px 8px; border-radius: 4px; font-weight: bold; font-size: 12px; cursor: pointer;
             display: flex; flex-direction: row; align-items: center; gap: 6px; transition: 0.2s;
+            flex-shrink: 0;
         }
         .ribbon-btn span { font-size: 14px; }
         .ribbon-btn:hover { background: #f3f4f6; } 
         
-        .ribbon-btn.active { 
-            background: #2563eb; color: white; border-color: #2563eb; 
-        }
+        .ribbon-btn.active { background: #2563eb; color: white; border-color: #2563eb; }
         
-        .ribbon-sep { width: 1px; height: 25px; background: rgba(0,0,0,0.2); margin: 0 2px; }
-        .cat-select-ribbon { padding: 3px; font-size: 11px; border-radius: 4px; border: 1px solid #0a0e17; font-weight: bold; }
+        .ribbon-sep { width: 1px; height: 25px; background: rgba(0,0,0,0.2); margin: 0 2px; flex-shrink: 0; }
+        .cat-select-ribbon { padding: 3px; font-size: 11px; border-radius: 4px; border: 1px solid #0a0e17; font-weight: bold; flex-shrink: 0; }
 
         .canvas-container {
             flex: 1; overflow: auto; display: flex; align-items: center; justify-content: center;
-            background: #1f2937; padding: 10px;
+            background: #1f2937; padding: 10px; position: relative;
         }
         canvas { 
             box-shadow: 0 0 20px rgba(0,0,0,0.5); background: white; 
             max-width: 100%; max-height: 100%; object-fit: contain;
         }
 
-        /* RIGHT SIDEBAR */
-        .sidebar-right {
-            width: 250px; 
-            background: white; 
-            border-left: 1px solid #d1d5db; 
-            transition: width 0.3s ease; 
-            display: flex; 
-            flex-direction: column; 
-            position: relative; 
-            flex-shrink: 0;
-            z-index: 50;
+        /* --- NEW MODAL STYLES --- */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.7); z-index: 1000; display: flex;
+            align-items: center; justify-content: center;
         }
-        .sidebar-right.collapsed { width: 0; border-left: none; }
-        
-        .guide-content { 
-            padding: 20px; overflow-y: auto; flex: 1; width: 250px; background: white;
+        .modal-box {
+            background: white; width: 400px; max-width: 90%; max-height: 80vh;
+            overflow-y: auto; border-radius: 8px; box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+            padding: 25px; position: relative;
         }
-        .sidebar-right.collapsed .guide-content { display: none; }
+        .modal-close {
+            position: absolute; top: 10px; right: 15px; font-size: 24px;
+            font-weight: bold; cursor: pointer; color: #6b7280;
+        }
+        .modal-title { font-size: 18px; font-weight: 800; margin-bottom: 15px; color: #1f2937; text-transform: uppercase; border-bottom: 2px solid #FFC107; display: inline-block; padding-bottom: 5px; }
+        .modal-text { font-size: 13px; color: #4b5563; line-height: 1.6; margin-bottom: 15px; }
+        .modal-text b { color: #111827; }
 
-        .guide-item { 
-            margin-bottom: 12px; font-size: 12px; color: #6b7280; line-height: 1.5; 
-            border-bottom: 1px solid #f3f4f6; padding-bottom: 10px; word-wrap: break-word; 
+        /* --- UPDATED ROOM CHIPS (VERTICAL RIGHT) --- */
+        .active-project-chips { 
+            position: absolute; top: 20px; right: 20px; bottom: auto; left: auto;
+            display: flex; flex-direction: column; gap: 8px; pointer-events: none;
+            align-items: flex-end; z-index: 40;
         }
-        .guide-item b { display: block; color: #1f2937; margin-bottom: 4px; font-size: 13px; }
-        
-        .toggle-guide-btn {
-            position: absolute; left: -20px; top: 50%; width: 20px; height: 40px; 
-            background: white; border: 1px solid #d1d5db; border-right: none; border-radius: 4px 0 0 4px; 
-            cursor: pointer; display: flex; align-items: center; justify-content: center; 
-            font-size: 12px; font-weight: bold; z-index: 60; color: #1f2937;
+        .room-chip { 
+            pointer-events: auto; background: rgba(50, 205, 50, 0.95); 
+            color: white; padding: 6px 12px; border-radius: 20px; 
+            font-size: 12px; font-weight: bold; display: flex; 
+            align-items: center; gap: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+            border: 1px solid white;
         }
+        .room-chip .del-btn { cursor: pointer; font-weight: 900; font-size: 14px; opacity: 0.8; }
+        .room-chip .del-btn:hover { opacity: 1; }
 
         /* FOOTER */
         .footer-bar {
@@ -166,13 +191,7 @@
         }
 
         .hidden { display: none !important; }
-        .active-project-chips { 
-            position: absolute; bottom: 10px; left: 20px; right: 20px; 
-            display: flex; gap: 5px; flex-wrap: wrap; pointer-events: none;
-        }
-        .room-chip { pointer-events: auto; background: rgba(50, 205, 50, 0.9); color: white; padding: 4px 8px; border-radius: 12px; font-size: 11px; font-weight: bold; display: flex; align-items: center; gap: 5px; box-shadow: 0 2px 4px rgba(0,0,0,0.3);}
-        .room-chip .del-btn { cursor: pointer; font-weight: 900; }
-
+        
         .loading-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(10, 14, 23, 0.95);
             z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #FFC107;
@@ -192,11 +211,39 @@
             }
         }
 
-        function toggleRightPanel() { 
-            const panel = document.getElementById('rightPanel');
-            const btn = document.getElementById('toggleBtn');
-            panel.classList.toggle('collapsed');
-            if(panel.classList.contains('collapsed')) { btn.innerText = "<"; } else { btn.innerText = ">"; }
+        // Guide Modal Functions
+        function openGuide() { document.getElementById('guideModal').classList.remove('hidden'); }
+        function closeGuide() { document.getElementById('guideModal').classList.add('hidden'); }
+        
+        // --- SENSITIVITY INVERSION LOGIC ---
+        function updateSens(source) {
+            const slider = document.getElementById('ui_sens_slider');
+            const num = document.getElementById('ui_sens_num');
+            const hidden = document.getElementById('real_thresh');
+            
+            let val = 0;
+            if(source === 'slider') {
+                val = parseInt(slider.value);
+                num.value = val;
+            } else {
+                val = parseInt(num.value);
+                slider.value = val;
+            }
+            const inverted = Math.floor(200 - (val * 1.8));
+            hidden.value = inverted;
+        }
+
+        function initSens(serverThresh) {
+            const sens = Math.round((200 - serverThresh) / 1.8);
+            document.getElementById('ui_sens_slider').value = sens;
+            document.getElementById('ui_sens_num').value = sens;
+            document.getElementById('real_thresh').value = serverThresh;
+        }
+
+        function scrollRibbon(direction) {
+            const container = document.getElementById('ribbonContent');
+            const scrollAmount = 150; 
+            container.scrollBy({ left: direction * scrollAmount, behavior: 'smooth' });
         }
         
         function showLoading() { document.getElementById('loading-overlay').classList.remove('hidden'); }
@@ -454,7 +501,31 @@
         }
     </script>
 </head>
-<body onload="checkFreeTrial()">
+<body onload="checkFreeTrial(); {% if result %}initSens({{ params.thresh }});{% endif %}">
+
+    <div id="guideModal" class="modal-overlay hidden" onclick="if(event.target===this) closeGuide()">
+        <div class="modal-box">
+            <span class="modal-close" onclick="closeGuide()">&times;</span>
+            <div class="modal-title">Controls Guide</div>
+            
+            <div class="modal-text">
+                <div style="margin-bottom:15px; font-weight:900; color:#2563eb;">// SENSOR SETTINGS</div>
+                <b>⚡ Sensitivity:</b> Right = More power (faint lines). Left = Less power (bold lines).<br>
+                <b>🌉 Gap Fill:</b> Connects broken lines (e.g., doorways).<br>
+                <b>🧹 Min Wall Length:</b> Filter noise/text.<br>
+                <b>📏 Wall Thickness:</b> Visual thickness of red lines.
+            </div>
+            
+            <div class="modal-text">
+                <div style="margin-bottom:15px; font-weight:900; color:#FFC107;">// TOOLBOX</div>
+                <b>📏 Scale:</b> First step! Draw line over known length (e.g., Door) -> Enter feet.<br>
+                <b>📐 Area:</b> Click room corners -> Click 'Save'.<br>
+                <b>👆 Count:</b> Click items to count (Sockets/Vents).<br>
+                <b>✋ Pan:</b> Drag to move blueprint.<br>
+                <b>🔍 Zoom:</b> Use dropdown or scroll.
+            </div>
+        </div>
+    </div>
 
     <div id="loading-overlay" class="loading-overlay hidden">
         <div class="spinner"></div>
@@ -465,6 +536,8 @@
         <a href="/" class="logo">Snap<span class="highlight">Takeoff</span></a>
         {% if result %}
         <div class="header-actions">
+            <button onclick="openGuide()" class="header-btn btn-guide">ℹ️ Controls Guide</button>
+
             <form id="download_form" action="/download_report" method="post" style="display:flex; gap:10px;">
                 <input type="hidden" name="final_feet" id="hidden_feet"><input type="hidden" name="final_cost" id="hidden_cost">
                 <input type="hidden" name="final_sheets" id="hidden_sheets"><input type="hidden" name="final_paint" id="hidden_paint">
@@ -493,10 +566,11 @@
                 </div>
                 
                 <div class="config-group">
-                    <div class="slider-label">Sensitivity</div>
+                    <div class="slider-label">Sensitivity (Detection Power)</div>
                     <div class="slider-row">
-                        <input type="range" id="range_thresh" name="thresh" min="20" max="200" value="{{ params.thresh }}" oninput="syncInputs('range_thresh', 'num_thresh')">
-                        <input type="number" id="num_thresh" value="{{ params.thresh }}" oninput="syncInputs('num_thresh', 'range_thresh')">
+                        <input type="range" id="ui_sens_slider" min="0" max="100" value="83" oninput="updateSens('slider')">
+                        <input type="number" id="ui_sens_num" value="83" oninput="updateSens('num')">
+                        <input type="hidden" id="real_thresh" name="thresh" value="50">
                     </div>
                 </div>
 
@@ -537,38 +611,39 @@
             <input type="hidden" id="raw_pixels_store" value="{{ raw_pixels }}">
             <input type="hidden" id="raw_width_store" value="{{ raw_width }}">
 
-            <div class="ribbon-toolbar">
-                <button class="ribbon-btn" id="btnScaleMode" onclick="setMode('scale')"><span>📏</span> Scale</button>
-                <div class="ribbon-sep"></div>
-                <button class="ribbon-btn" id="btnAreaMode" onclick="setMode('area')"><span>📐</span> Area</button>
-                <button class="ribbon-btn hidden" id="btnSaveArea" onclick="saveCurrentArea()" style="background:#2ea043; color:white; padding:4px 8px;">💾 Save</button>
-                <div class="ribbon-sep"></div>
-                <button class="ribbon-btn" id="btnCountMode" onclick="setMode('count')"><span>👆</span> Count</button>
-                <select id="catSelector" class="cat-select-ribbon hidden" onchange="currentCategory=this.value"><option value="elec">⚡ Elec</option><option value="plumb">🚿 Plumb</option><option value="hvac">❄️ HVAC</option></select>
-                <div class="ribbon-sep"></div>
-                <button class="ribbon-btn" id="btnMeasureMode" onclick="setMode('measure')"><span>📏</span> Tape</button>
-                <div class="ribbon-sep"></div>
-                
-                <button class="ribbon-btn" id="btnPanMode" onclick="setMode('pan')"><span>✋</span> Pan</button>
-                
-                <select class="cat-select-ribbon" onchange="setZoom(this.value)" style="margin-left:5px;">
-                    <option value="fit">Fit</option>
-                    <option value="0.1">10%</option>
-                    <option value="0.25">25%</option>
-                    <option value="0.5">50%</option>
-                    <option value="0.75">75%</option>
-                    <option value="1.0" selected>100% (Actual)</option>
-                    <option value="1.5">150%</option>
-                    <option value="2.0">200%</option>
-                    <option value="3.0">300%</option>
-                    <option value="4.0">400%</option>
-                </select>
-                
-                <div class="ribbon-sep"></div>
-                <button class="ribbon-btn active" id="btnLoupeToggle" onclick="toggleLoupe()"><span>🔍</span> Zoom</button>
-                <button class="ribbon-btn" onclick="undoAction()"><span>↩️</span> Undo</button>
-                <button class="ribbon-btn" onclick="clearTools()" style="color:#d32f2f;"><span>🗑️</span> Reset</button>
-                <button class="ribbon-btn" onclick="downloadCanvas()"><span>📷</span> Img</button>
+            <div class="ribbon-wrapper">
+                <button class="ribbon-scroll-btn" onclick="scrollRibbon(-1)">&lt;</button>
+                <div class="ribbon-content" id="ribbonContent">
+                    <button class="ribbon-btn" id="btnScaleMode" onclick="setMode('scale')"><span>📏</span> Scale</button>
+                    <div class="ribbon-sep"></div>
+                    <button class="ribbon-btn" id="btnAreaMode" onclick="setMode('area')"><span>📐</span> Area</button>
+                    <button class="ribbon-btn hidden" id="btnSaveArea" onclick="saveCurrentArea()" style="background:#2ea043; color:white; padding:4px 8px;">💾 Save</button>
+                    <div class="ribbon-sep"></div>
+                    <button class="ribbon-btn" id="btnCountMode" onclick="setMode('count')"><span>👆</span> Count</button>
+                    <select id="catSelector" class="cat-select-ribbon hidden" onchange="currentCategory=this.value"><option value="elec">⚡ Elec</option><option value="plumb">🚿 Plumb</option><option value="hvac">❄️ HVAC</option></select>
+                    <div class="ribbon-sep"></div>
+                    <button class="ribbon-btn" id="btnMeasureMode" onclick="setMode('measure')"><span>📏</span> Tape</button>
+                    <div class="ribbon-sep"></div>
+                    <button class="ribbon-btn" id="btnPanMode" onclick="setMode('pan')"><span>✋</span> Pan</button>
+                    <select class="cat-select-ribbon" onchange="setZoom(this.value)" style="margin-left:5px;">
+                        <option value="fit">Fit</option>
+                        <option value="0.1">10%</option>
+                        <option value="0.25">25%</option>
+                        <option value="0.5">50%</option>
+                        <option value="0.75">75%</option>
+                        <option value="1.0" selected>100% (Actual)</option>
+                        <option value="1.5">150%</option>
+                        <option value="2.0">200%</option>
+                        <option value="3.0">300%</option>
+                        <option value="4.0">400%</option>
+                    </select>
+                    <div class="ribbon-sep"></div>
+                    <button class="ribbon-btn active" id="btnLoupeToggle" onclick="toggleLoupe()"><span>🔍</span> Zoom</button>
+                    <button class="ribbon-btn" onclick="undoAction()"><span>↩️</span> Undo</button>
+                    <button class="ribbon-btn" onclick="clearTools()" style="color:#d32f2f;"><span>🗑️</span> Reset</button>
+                    <button class="ribbon-btn" onclick="downloadCanvas()"><span>📷</span> Img</button>
+                </div>
+                <button class="ribbon-scroll-btn" onclick="scrollRibbon(1)">&gt;</button>
             </div>
 
             <div class="canvas-container">
@@ -587,19 +662,6 @@
             {% endif %}
         </div>
 
-        <div class="sidebar-right" id="rightPanel">
-            <button class="toggle-guide-btn" id="toggleBtn" onclick="toggleRightPanel()">></button>
-            <div class="guide-content">
-                <div class="sidebar-title">Controls Guide</div>
-                <div class="guide-item"><b>📏 Calibrate Scale</b> First step. Draw a line over a known dimension (e.g., a door) and enter '3.0'.</div>
-                <div class="guide-item"><b>📐 Area Tool</b> Click corners of a room. Click 'Save' when done.</div>
-                <div class="guide-item"><b>👆 Count Tool</b> Click items to tally them. Change category in dropdown.</div>
-                <div class="guide-item"><b>📏 Tape Tool</b> Click 2 points to measure distance temporarily.</div>
-                <div class="guide-item"><b>✋ Pan Tool</b> Select to drag blueprint around.</div>
-                <div class="guide-item"><b>🔍 Zoom</b> Use dropdown or scroll.</div>
-            </div>
-        </div>
-
     </div>
 
     {% if result %}
@@ -608,7 +670,6 @@
             <div class="metric-mini"><label>Width (ft)</label><input type="number" id="real_width_input" class="input-mini" value="50" oninput="recalc()"></div>
             <div class="metric-mini"><label id="lbl_sheet">Sheet $</label><input type="number" id="cost_sheet" class="input-mini" value="15" oninput="recalc()"></div>
             <div class="metric-mini"><label id="lbl_paint">Paint $</label><input type="number" id="cost_paint" class="input-mini" value="40" oninput="recalc()"></div>
-             
              <input type="hidden" id="cost_elec" value="5"><input type="hidden" id="cost_plumb" value="150"><input type="hidden" id="cost_hvac" value="80">
             <select id="currency_select" class="input-mini" onchange="recalc()" style="width:80px; border-color:#FFC107; color:#FFC107;">
                 <option value="$">USD ($)</option>

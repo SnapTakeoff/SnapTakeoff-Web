@@ -6,36 +6,63 @@ import io
 import os
 import json 
 import fitz # PyMuPDF
-from flask import Flask, render_template, request, send_file, jsonify
+from flask import Flask, render_template, request, send_file
 
 app = Flask(__name__, template_folder='.')
 
-# --- IMAGE PROCESSING LOGIC ---
+# --- IMPROVED IMAGE PROCESSING LOGIC ---
 def process_walls(file_stream, thresh, min_len, gap, thick):
-    file_bytes = np.asarray(bytearray(file_stream.read()), dtype=np.uint8)
+    # Read file stream into numpy array
+    if isinstance(file_stream, bytes):
+        file_bytes = np.frombuffer(file_stream, np.uint8)
+    else:
+        file_bytes = np.asarray(bytearray(file_stream.read()), dtype=np.uint8)
+        
     img = cv2.imdecode(file_bytes, 1)
+    if img is None: return None, 0, 0
+
+    # 1. Grayscale
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-    gray_inv = cv2.bitwise_not(gray)
-    _, binary = cv2.threshold(gray_inv, 200, 255, cv2.THRESH_BINARY)
     
+    # 2. Gaussian Blur (NEW): Removes texture/noise (carpet patterns)
+    # This is critical for complex blueprints to stop detecting floor textures
+    gray_blurred = cv2.GaussianBlur(gray, (5, 5), 0)
+    
+    # 3. Inverse Binary Threshold
+    # We target dark pixels (walls). Pixels < 200 become 255 (White), others 0 (Black).
+    # This filters out light grey textures effectively.
+    _, binary = cv2.threshold(gray_blurred, 200, 255, cv2.THRESH_BINARY_INV)
+    
+    # 4. Morphological Opening (NEW): Removes small noise specks
+    # This deletes isolated pixels that aren't part of a line
+    kernel_noise = np.ones((3,3), np.uint8)
+    binary = cv2.morphologyEx(binary, cv2.MORPH_OPEN, kernel_noise)
+
+    # 5. User Adjustment (Thickening for detection)
     if thick > 1:
-        kernel = np.ones((thick, thick), np.uint8)
-        binary = cv2.erode(binary, kernel, iterations=1)
-        binary = cv2.dilate(binary, kernel, iterations=1)
+        kernel_thick = np.ones((thick, thick), np.uint8)
+        binary = cv2.dilate(binary, kernel_thick, iterations=1)
     
+    # 6. Edge Detection
     edges = cv2.Canny(binary, 50, 150)
+    
+    # 7. Line Detection (HoughLinesP)
     lines = cv2.HoughLinesP(edges, 1, np.pi/180, threshold=thresh, minLineLength=min_len, maxLineGap=gap)
     
     line_img = img.copy()
     total_pixels = 0
+    
     if lines is not None:
         for line in lines:
             x1, y1, x2, y2 = line[0]
-            cv2.line(line_img, (x1, y1), (x2, y2), (0, 255, 0), 5)
+            # Draw Green Line (Thinner width for cleaner visualization)
+            cv2.line(line_img, (x1, y1), (x2, y2), (0, 255, 0), 3)
             total_pixels += np.sqrt((x2 - x1)**2 + (y2 - y1)**2)
     
+    # Encode result
     _, buffer = cv2.imencode('.jpg', line_img)
     img_str = base64.b64encode(buffer).decode('utf-8')
+    
     return img_str, total_pixels, img.shape[1]
 
 # --- ROUTES ---
@@ -57,19 +84,22 @@ def tool():
     file = request.files['file']
     if file.filename == '': return "No file"
 
+    # Get Params
     thresh = int(request.form.get('thresh', 50))
     min_len = int(request.form.get('min_len', 100))
     gap = int(request.form.get('gap', 20))
     thick = int(request.form.get('thick', 1))
 
+    # Process PDF or Image
     if file.filename.lower().endswith('.pdf'):
         doc = fitz.open(stream=file.read(), filetype="pdf")
         page = doc.load_page(0)
-        pix = page.get_pixmap(dpi=200)
+        pix = page.get_pixmap(dpi=200) # Higher DPI for better detection
         img_bytes = pix.tobytes("png")
-        file_stream = io.BytesIO(img_bytes)
-        img_str, pixels, width_px = process_walls(file_stream, thresh, min_len, gap, thick)
+        # Pass bytes directly to processor
+        img_str, pixels, width_px = process_walls(img_bytes, thresh, min_len, gap, thick)
     else:
+        # Pass file stream
         img_str, pixels, width_px = process_walls(file, thresh, min_len, gap, thick)
     
     return render_template('tool.html', 
@@ -124,7 +154,7 @@ def download_report():
         unit_costs.append("-")
         totals.append("-")
 
-    line_items.extend(["Electrical Fix (Sockets/Switch)", "Plumbing Fix (Sinks/Toilets)", "HVAC/Mechanical Vents"])
+    line_items.extend(["Electrical Fix", "Plumbing Fix", "HVAC/Mech"])
     quantities.extend([f"{count_elec} items", f"{count_plumb} items", f"{count_hvac} items"])
     unit_costs.extend([f"{currency_sym}{unit_elec:.2f}", f"{currency_sym}{unit_plumb:.2f}", f"{currency_sym}{unit_hvac:.2f}"])
     totals.extend([f"{currency_sym}{count_elec*unit_elec:.2f}", f"{currency_sym}{count_plumb*unit_plumb:.2f}", f"{currency_sym}{count_hvac*unit_hvac:.2f}"])
@@ -150,7 +180,10 @@ def download_report():
 
 @app.route('/favicon.ico')
 def favicon():
-    return send_file('favicon.png', mimetype='image/png')
+    # Simple workaround if favicon.png doesn't exist yet
+    if os.path.exists('favicon.png'):
+        return send_file('favicon.png', mimetype='image/png')
+    return "", 204
 
 if __name__ == '__main__':
     app.run(debug=True)
