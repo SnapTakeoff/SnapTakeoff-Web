@@ -3,117 +3,191 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SnapTakeoff - AI Estimation</title>
+    <title>SnapTakeoff - AI Construction Estimator</title>
     <link rel="icon" href="/favicon.ico">
     <style>
-        /* --- CORE STYLES --- */
-        * { box-sizing: border-box; }
+        /* --- GLOBAL STYLES --- */
+        :root {
+            --primary: #FFC107;
+            --dark: #0a0e17;
+            --light-bg: #ffffff;
+            --light-gray: #f3f4f6;
+            --text-dark: #1f2937;
+            --text-gray: #4b5563;
+            --text-light: #d1d5db;
+        }
+        
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Helvetica Neue', sans-serif; }
+        
         body { 
-            margin: 0; font-family: 'Helvetica Neue', sans-serif; background-color: #f9fafb; color: #1f2937;
+            background-color: var(--light-bg); 
+            color: var(--text-dark); 
+            line-height: 1.6;
         }
-        .highlight { color: #FFC107; } 
 
-        /* HEADER */
+        a { text-decoration: none; color: inherit; }
+
+        /* --- DEVELOPMENT BANNER --- */
+        .dev-banner {
+            background: #fff3cd;
+            color: #856404;
+            border-bottom: 1px solid #ffeeba;
+            text-align: center;
+            padding: 10px;
+            font-size: 14px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        /* --- NAVBAR (Dark) --- */
         .navbar {
-            height: 60px; background-color: #0a0e17; display: flex; align-items: center;
-            justify-content: flex-start; padding: 0 40px; border-bottom: 1px solid #1f2937;
+            background-color: var(--dark);
+            display: flex; justify-content: center; /* Centered Logo since button is gone */
+            align-items: center;
+            padding: 20px 5%; 
+            border-bottom: 1px solid #1f2937;
         }
-        .logo { font-size: 24px; font-weight: 800; color: white; text-decoration: none; }
+        .logo { font-size: 24px; font-weight: 900; letter-spacing: -1px; color: white; }
+        .logo span { color: var(--primary); }
 
-        /* HERO & CONTENT */
-        .hero-band {
-            background-color: #0a0e17; text-align: center; padding: 80px 20px;
-            width: 100%; border-bottom: 4px solid #FFC107;
+        /* --- HERO SECTION (Dark) --- */
+        .hero {
+            text-align: center; padding: 100px 20px 120px 20px;
+            background-color: var(--dark);
+            background: radial-gradient(circle at center, #1f2937 0%, #0a0e17 70%);
+            color: white;
         }
-        .hero-band h1 { font-size: 3.5rem; color: white; margin-bottom: 20px; margin-top: 0; line-height: 1.2; }
-        .hero-band p { font-size: 1.2rem; color: #c9d1d9; max-width: 600px; margin: 0 auto 40px auto; }
-        
-        .btn-cta {
-            background-color: #FFC107; color: #0a0e17; padding: 18px 40px; font-size: 18px; font-weight: 800;
-            border-radius: 50px; text-decoration: none; display: inline-block; transition: 0.3s;
-            box-shadow: 0 4px 15px rgba(255, 193, 7, 0.4);
+        .hero h1 {
+            font-size: 48px; font-weight: 800; margin-bottom: 20px;
+            line-height: 1.2;
         }
-        .btn-cta:hover { transform: translateY(-3px); box-shadow: 0 6px 25px rgba(255, 193, 7, 0.6); background-color: #ffb300; }
-        
-        .container { max-width: 1200px; margin: 0 auto; padding: 60px 20px; }
-        
-        .features { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 30px; margin-top: 40px; margin-bottom: 60px; }
+        .hero p {
+            font-size: 18px; color: var(--text-light); margin-bottom: 40px;
+            max-width: 600px; margin-left: auto; margin-right: auto;
+        }
+        .cta-btn {
+            background: var(--primary); color: var(--dark);
+            padding: 15px 40px; font-size: 18px; font-weight: 900;
+            border-radius: 6px; display: inline-block; transition: 0.3s;
+            box-shadow: 0 4px 15px rgba(255, 193, 7, 0.3);
+        }
+        .cta-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(255, 193, 7, 0.5); }
+
+        /* --- FEATURES GRID (Light Mode) --- */
+        .features {
+            padding: 80px 10%; 
+            background: var(--light-bg);
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 40px; 
+            margin-top: -50px; /* Slight overlap with hero */
+        }
         .feature-card {
-            background: #ffffff; padding: 30px; border-radius: 12px; border: 1px solid #e5e7eb; 
-            text-align: center; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); 
+            background: var(--light-gray); 
+            padding: 30px; 
+            border-radius: 8px; 
+            border: 1px solid #e5e7eb;
+            transition: 0.3s;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
         }
-        .feature-icon { font-size: 40px; margin-bottom: 20px; display: block; }
-        .feature-title { font-size: 18px; color: #1f2937; font-weight: bold; margin-bottom: 10px; } 
-        .feature-desc { font-size: 14px; color: #6b7280; line-height: 1.6; } 
+        .feature-card:hover { border-color: var(--primary); transform: translateY(-5px); }
+        .icon { font-size: 40px; margin-bottom: 20px; display: block; }
+        .feature-card h3 { margin-bottom: 10px; font-size: 20px; color: var(--text-dark); }
+        .feature-card p { color: var(--text-gray); font-size: 14px; }
 
-        .faq-section { margin-top: 60px; }
-        .faq-section h2 { text-align: center; font-size: 2rem; margin-bottom: 40px; color: #1f2937; }
-        .faq-item {
-            background: white; border: 1px solid #e5e7eb; border-radius: 8px; padding: 20px;
-            margin-bottom: 15px; box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+        /* --- FAQ SECTION (Light Mode) --- */
+        .faq-section {
+            padding: 80px 15%;
+            background: #fff;
+            border-top: 1px solid #e5e7eb;
         }
-        .faq-q { font-weight: bold; font-size: 18px; color: #1f2937; margin-bottom: 10px; display: flex; align-items: center; gap: 10px;}
-        .faq-a { color: #6b7280; line-height: 1.5; font-size: 15px; margin-left: 28px; }
-        
-        .footer { text-align: center; margin-top: 80px; padding: 40px 0; border-top: 1px solid #e5e7eb; color: #6b7280; font-size: 14px; }
-        .footer a { color: #FFC107; text-decoration: none; font-weight: bold;}
+        .faq-title {
+            text-align: center; font-size: 32px; font-weight: 800; color: var(--text-dark);
+            margin-bottom: 50px;
+        }
+        .faq-item {
+            margin-bottom: 25px; border-bottom: 1px solid #e5e7eb; padding-bottom: 20px;
+        }
+        .faq-question {
+            font-size: 18px; font-weight: bold; color: var(--text-dark); margin-bottom: 10px;
+        }
+        .faq-answer {
+            font-size: 15px; color: var(--text-gray); line-height: 1.6;
+        }
+
+        /* --- FOOTER (Light Mode) --- */
+        footer {
+            text-align: center; padding: 40px; 
+            background: var(--light-gray);
+            color: var(--text-gray); font-size: 12px;
+            border-top: 1px solid #e5e7eb;
+        }
     </style>
 </head>
 <body>
 
-    <div class="navbar">
-        <a href="/" class="logo">Snap<span class="highlight">Takeoff</span></a>
+    <div class="dev-banner">
+        🚧 <span>SITE UNDER DEVELOPMENT: Features are currently in Beta testing.</span>
     </div>
 
-    <div class="hero-band">
-        <h1>AI Estimation for<br><span class="highlight">Modern Contractors</span></h1>
-        <p>Upload your blueprint. Get instant material takeoffs and cost estimates. No complex software required.</p>
-        <a href="/tool" class="btn-cta">GET STARTED</a>
-    </div>
+    <nav class="navbar">
+        <a href="/" class="logo">Snap<span>Takeoff</span></a>
+    </nav>
 
-    <div class="container">
-        <div class="features">
-            <div class="feature-card">
-                <span class="feature-icon">📂</span>
-                <div class="feature-title">1. Upload Blueprint</div>
-                <div class="feature-desc">Simply upload an image of your floor plan (JPG or PNG) or PDF. No CAD files needed.</div>
-            </div>
-            <div class="feature-card">
-                <span class="feature-icon">🤖</span>
-                <div class="feature-title">2. AI Analysis</div>
-                <div class="feature-desc">Our intelligent sensor detects walls and calculates linear footage automatically.</div>
-            </div>
-            <div class="feature-card">
-                <span class="feature-icon">📊</span>
-                <div class="feature-title">3. Instant Excel</div>
-                <div class="feature-desc">Download a professional cost estimate and material list in seconds.</div>
-            </div>
+    <section class="hero">
+        <h1>AI Estimator for<br>Modern Contractors</h1>
+        <p>Stop printing blueprints. Upload your PDF, let AI detect walls, and export a material cost Excel sheet in seconds.</p>
+        <a href="/tool" class="cta-btn">START FREE ESTIMATE</a>
+    </section>
+
+    <section class="features">
+        <div class="feature-card">
+            <span class="icon">🤖</span>
+            <h3>AI Wall Detection</h3>
+            <p>Our computer vision algorithm automatically highlights walls, filtering out furniture and noise.</p>
         </div>
+        <div class="feature-card">
+            <span class="icon">📊</span>
+            <h3>Instant Excel Export</h3>
+            <p>Generate professional Bill of Materials (BOM) for drywall, paint, and framing instantly.</p>
+        </div>
+        <div class="feature-card">
+            <span class="icon">💾</span>
+            <h3>Save Your Work</h3>
+            <p>Use our new Project Save/Load feature to keep your measurements safe locally.</p>
+        </div>
+    </section>
+
+    <section class="faq-section">
+        <h2 class="faq-title">Frequently Asked Questions</h2>
         
-         <div class="faq-section">
-            <h2>Frequently Asked Questions</h2>
-            <div class="faq-item">
-                <div class="faq-q"><span class="highlight">?</span> How accurate is the estimation?</div>
-                <div class="faq-a">The accuracy depends on the image clarity and your calibration. If you set the "Real World Width" correctly, SnapTakeoff is typically accurate within 95-98% for linear footage.</div>
-            </div>
-            <div class="faq-item">
-                <div class="faq-q"><span class="highlight">?</span> What file formats do you accept?</div>
-                <div class="faq-a">We accept standard image files (JPG, PNG) and PDF documents. If you upload a multi-page PDF, we will analyze the first page automatically.</div>
-            </div>
-            <div class="faq-item">
-                <div class="faq-q"><span class="highlight">?</span> Is my payment information secure?</div>
-                <div class="faq-a">Yes. We use Razorpay, a banking-grade payment processor. We do not store your card details on our servers.</div>
-            </div>
-            <div class="faq-item">
-                <div class="faq-q"><span class="highlight">?</span> Can I customize material prices?</div>
-                <div class="faq-a">Absolutely. After scanning, you can enter your own local prices for Drywall Sheets and Paint to get an exact quote for your specific job.</div>
-            </div>
+        <div class="faq-item">
+            <div class="faq-question">Is SnapTakeoff free to use?</div>
+            <div class="faq-answer">Yes, we offer a generous Free Tier for small projects. You can generate limited estimates and test the AI capabilities without a credit card.</div>
         </div>
-        <div class="footer">
-            <p>Have questions? Email us at <a href="mailto:filehangar2025@gmail.com">filehangar2025@gmail.com</a></p>
-            <p style="opacity: 0.7; margin-top: 10px;">&copy; 2024 SnapTakeoff Inc.</p>
+
+        <div class="faq-item">
+            <div class="faq-question">How do I save my progress?</div>
+            <div class="faq-answer">We use a local file system. Click the "Save" button in the toolbar to download a project file (.json). You can "Load" this file anytime to restore your exact measurements.</div>
         </div>
-    </div>
+
+        <div class="faq-item">
+            <div class="faq-question">What file formats do you support?</div>
+            <div class="faq-answer">We support standard image formats (JPG, PNG) and PDF blueprints. For best AI results, ensure high-contrast black and white drawings.</div>
+        </div>
+
+        <div class="faq-item">
+            <div class="faq-question">Can I use this on a tablet?</div>
+            <div class="faq-answer">SnapTakeoff is optimized for desktop browsers due to the precision required for mouse clicks, but it can be viewed on tablets for reference.</div>
+        </div>
+    </section>
+
+    <footer>
+        &copy; 2026 SnapTakeoff Pro. All rights reserved.<br>
+        Developed for Construction Professionals.
+    </footer>
 
 </body>
 </html>
