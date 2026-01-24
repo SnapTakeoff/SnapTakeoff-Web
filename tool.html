@@ -16,7 +16,7 @@
             display: flex; flex-direction: column; height: 100vh; background-color: #111827; 
         }
 
-        /* HEADER */
+        /* 1. HEADER (Top) */
         .navbar {
             height: 50px; background-color: #0a0e17; display: flex; align-items: center;
             justify-content: space-between; padding: 0 20px; border-bottom: 1px solid #1f2937; flex-shrink: 0; z-index: 60;
@@ -26,7 +26,6 @@
 
         .header-actions { display: flex; gap: 10px; align-items: center; }
         
-        /* HEADER BUTTONS & INPUTS */
         .header-btn, .header-select {
             padding: 6px 12px; border-radius: 4px; font-weight: bold; font-size: 13px; cursor: pointer; 
             border: 1px solid white; background: white; color: #0a0e17; transition: 0.2s;
@@ -34,65 +33,58 @@
         .header-btn:hover, .header-select:hover {
             background: #2563eb; color: white; border-color: #2563eb;   
         }
-        
         .header-btn.active {
             background: #2563eb; color: white; border-color: #2563eb;
         }
-
-        /* DOWNLOAD BUTTON */
         .btn-dl { background: white; color: #2563eb; border: 1px solid #2563eb; transition: 0.2s; }
         .btn-dl:hover { background: #2563eb; color: white; }
 
-        /* APP BODY */
-        .app-body { display: flex; flex: 1; overflow: hidden; position: relative; }
+        /* 2. TOOLBAR STRIP (Middle - Attached) */
+        .toolbar-strip {
+            height: 50px; 
+            background-color: #d1d5db; 
+            display: flex; align-items: center; justify-content: center;
+            border-bottom: 1px solid #9ca3af;
+            flex-shrink: 0; z-index: 50;
+            padding: 0 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
 
-        /* CENTER WORKSPACE */
-        .workspace-center { flex: 1; display: flex; flex-direction: column; background-color: #f3f4f6; position: relative; min-width: 0; }
-
-        /* --- FLOATING TOOLBAR (LEFT) --- */
-        .floating-toolbar {
-            position: absolute; left: 15px; top: 50%; transform: translateY(-50%);
-            display: flex; flex-direction: column; 
-            background: #d1d5db; padding: 5px; 
-            border-radius: 8px;
-            box-shadow: 5px 5px 20px rgba(0,0,0,0.4); border: 1px solid #9ca3af;
-            z-index: 50; max-height: 80%; 
+        .toolbar-scroll-container {
+            display: flex; align-items: center; gap: 5px; width: 100%; max-width: 1000px;
         }
 
         .toolbar-inner {
-            flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 8px;
-            scrollbar-width: none; padding: 5px 0; 
+            flex: 1; overflow-x: auto; display: flex; flex-direction: row; gap: 8px; align-items: center;
+            scrollbar-width: none; padding: 0 5px; white-space: nowrap; justify-content: center;
         }
-        .toolbar-inner::-webkit-scrollbar { width: 0px; }
+        .toolbar-inner::-webkit-scrollbar { display: none; }
 
-        .scroll-btn-v {
+        .scroll-btn-h {
             background: transparent; border: none; color: #4b5563;
-            cursor: pointer; font-size: 12px; height: 20px; width: 100%;
+            cursor: pointer; font-size: 14px; width: 25px; height: 40px;
             display: flex; align-items: center; justify-content: center;
-            transition: 0.2s; border-radius: 4px;
+            transition: 0.2s; border-radius: 4px; flex-shrink: 0;
         }
-        .scroll-btn-v:hover { background: rgba(0,0,0,0.1); color: #000; }
+        .scroll-btn-h:hover { background: rgba(0,0,0,0.1); color: #000; }
 
+        /* ICON BUTTONS (Square) */
         .tool-btn {
             background: white; border: 1px solid #9ca3af; color: #0a0e17;
-            width: 40px; height: 40px; border-radius: 6px; font-size: 18px;
+            width: 36px; height: 36px; border-radius: 6px; font-size: 18px;
             cursor: pointer; display: flex; align-items: center; justify-content: center;
             transition: 0.2s; position: relative; flex-shrink: 0;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
         }
         .tool-btn:hover { background: #f9fafb; border-color: #6b7280; }
         .tool-btn.active { background: #2563eb; color: white; border-color: #2563eb; }
         
-        .tool-btn::after {
-            content: attr(data-tooltip);
-            position: absolute; left: 50px; top: 50%; transform: translateY(-50%);
-            background: #000; color: #fff; padding: 4px 8px; font-size: 11px;
-            border-radius: 4px; white-space: nowrap; opacity: 0; pointer-events: none; transition: 0.2s;
-            font-weight: bold; font-family: sans-serif; z-index: 60;
-        }
-        .tool-btn:hover::after { opacity: 1; }
+        .tool-sep { width: 1px; height: 24px; background: #9ca3af; margin: 0 6px; flex-shrink: 0; }
 
-        .tool-sep { height: 1px; background: #9ca3af; margin: 2px 0; width: 100%; flex-shrink: 0; }
+        /* 3. APP BODY / WORKSPACE (Bottom) */
+        .app-body { display: flex; flex: 1; overflow: hidden; position: relative; }
+
+        .workspace-center { flex: 1; display: flex; flex-direction: column; background-color: #f3f4f6; position: relative; min-width: 0; }
 
         /* --- CENTER UPLOAD AREA --- */
         .upload-center {
@@ -137,6 +129,8 @@
             font-size: 20px; font-weight: 800; margin-bottom: 25px; 
             color: #1f2937; border-bottom: 2px solid #FFC107; display: inline-block; padding-bottom: 5px; 
         }
+        .modal-text { font-size: 13px; color: #4b5563; line-height: 1.6; margin-bottom: 15px; }
+        .modal-text b { color: #111827; }
         
         .config-row { margin-bottom: 20px; }
         .config-label { font-size: 13px; font-weight: bold; color: #374151; margin-bottom: 8px; display: block; }
@@ -217,8 +211,9 @@
             const sens = Math.round((200 - serverThresh) / 1.8); document.getElementById('ui_sens_slider').value = sens;
             document.getElementById('ui_sens_num').value = sens; document.getElementById('real_thresh').value = serverThresh;
         }
-        function scrollRibbon(direction) { document.getElementById('ribbonContent').scrollBy({ left: direction * 150, behavior: 'smooth' }); }
-        function scrollToolbar(direction) { document.getElementById('toolbarContent').scrollBy({ top: direction * 60, behavior: 'smooth' }); }
+        
+        // --- HORIZONTAL SCROLL FUNCTION ---
+        function scrollToolbar(direction) { document.getElementById('toolbarContent').scrollBy({ left: direction * 100, behavior: 'smooth' }); }
         
         function showLoading() { document.getElementById('loading-overlay').classList.remove('hidden'); }
         function checkFreeTrial() { if (localStorage.getItem('snaptakeoff_trial_used')) { const btn = document.getElementById('btn-free-trial'); if(btn) btn.classList.add('hidden'); } }
@@ -234,7 +229,7 @@
             canvas = document.getElementById('blueprintCanvas'); ctx = canvas.getContext('2d');
             bgImage = new Image();
             bgImage.onload = function() { canvas.width = bgImage.width; canvas.height = bgImage.height; redrawCanvas(); setZoom('fit'); 
-            initTooltips(); 
+            initTooltips(); // Initialize tooltips
             };
             bgImage.src = "data:image/jpeg;base64," + imgDataStr;
 
@@ -248,7 +243,7 @@
                 if (mode === 'none') return;
                 const rect = canvas.getBoundingClientRect(); const scaleX = canvas.width / rect.width; const scaleY = canvas.height / rect.height;
                 const x = (e.clientX - rect.left) * scaleX; const y = (e.clientY - rect.top) * scaleY;
-                if (mode === 'area') { areaPoints.push({x, y}); calcArea(); } 
+                if (mode === 'area') { areaPoints.push({x, y}); recalc(); } 
                 else if (mode === 'count') { countPoints.push({x, y, type: currentCategory}); updateCountDisplay(); recalc(); } 
                 else if (mode === 'scale') { scalePoints.push({x, y}); if (scalePoints.length === 2) { redrawCanvas(); setTimeout(finalizeScale, 50); } } 
                 else if (mode === 'measure') { measurePoints.push({x, y}); redrawCanvas(); }
@@ -258,6 +253,7 @@
             canvas.addEventListener('mouseleave', function() { isPanning = false; });
         }
 
+        // --- JS TOOLTIPS (FLOATING) ---
         function initTooltips() {
             const tooltip = document.createElement('div');
             tooltip.style.cssText = "position:fixed; background:#0a0e17; color:white; padding:6px 10px; border-radius:4px; font-size:12px; font-weight:bold; pointer-events:none; display:none; z-index:9999; box-shadow:2px 2px 5px rgba(0,0,0,0.2); white-space:nowrap;";
@@ -268,7 +264,9 @@
                     if(text) {
                         tooltip.innerText = text; tooltip.style.display = 'block';
                         const rect = btn.getBoundingClientRect();
-                        tooltip.style.left = (rect.right + 10) + 'px'; tooltip.style.top = (rect.top + (rect.height/2) - (tooltip.offsetHeight/2)) + 'px';
+                        // Position BELOW the button
+                        tooltip.style.left = (rect.left + (rect.width/2) - (tooltip.offsetWidth/2)) + 'px'; 
+                        tooltip.style.top = (rect.bottom + 8) + 'px';
                     }
                 });
                 btn.addEventListener('mouseleave', () => { tooltip.style.display = 'none'; });
@@ -494,16 +492,48 @@
         function updateCountDisplay() {}
         function recalc() {
             try {
-                document.getElementById('disp_count').innerText = countPoints.length;
+                // 1. Basic Setup
+                // Note: We removed the old 'disp_count' update here because we removed that box
                 const rawWidth = parseFloat(document.getElementById('raw_width_store').value);
                 let realFt = parseFloat(document.getElementById('real_width_input').value) || 1;
                 const scale = rawWidth / realFt;
+
+                // 2. Get Ceiling Height
+                let ceilingHeight = parseFloat(document.getElementById('wall_height_input').value) || 8.0;
+
+                let totalSqFt = 0;
+                let totalWallSqFt = 0;
+                let breakdown = [];
+
+                // 3. THE LOOP
+                for(let r of savedAreas) { 
+                    // Floor Area
+                    let ft = getPolyArea(r.points) / (scale*scale); 
+                    totalSqFt += ft;
+
+                    // Wall Area
+                    let perimeterPx = getPolyPerimeter(r.points);
+                    let perimeterFt = perimeterPx / scale; 
+                    let wallArea = perimeterFt * ceilingHeight;
+                    totalWallSqFt += wallArea;
+
+                    breakdown.push({name: r.name, sqft: ft.toFixed(2)}); 
+                }
                 
-                let totalSqFt = 0; let breakdown = [];
-                for(let r of savedAreas) { let ft = getPolyArea(r.points) / (scale*scale); totalSqFt += ft; breakdown.push({name: r.name, sqft: ft.toFixed(2)}); }
-                let currentFt = getPolyArea(areaPoints) / (scale*scale); totalSqFt += currentFt;
+                // 4. Handle Current Drawing
+                if (areaPoints.length > 0) {
+                    let currentFt = getPolyArea(areaPoints) / (scale*scale); 
+                    totalSqFt += currentFt;
+                    
+                    let currentPerimPx = getPolyPerimeter(areaPoints);
+                    let currentWall = (currentPerimPx / scale) * ceilingHeight;
+                    totalWallSqFt += currentWall;
+                }
                 
+                // 5. Update Displays
                 document.getElementById('disp_area').innerText = totalSqFt.toFixed(2);
+                document.getElementById('disp_wall_area').innerText = totalWallSqFt.toFixed(2);
+                
                 document.getElementById('hidden_area').value = totalSqFt.toFixed(2);
                 document.getElementById('hidden_area_breakdown').value = JSON.stringify(breakdown);
 
@@ -517,14 +547,31 @@
 
                 let pSheet = parseFloat(document.getElementById('cost_sheet').value) || 0;
                 let pPaint = parseFloat(document.getElementById('cost_paint').value) || 0;
-                let sheets = ((totalLinearFt * 8) / 32) * waste;
+                
+                let sheets = ((totalLinearFt * 8) / 32) * waste; 
                 let paint = ((totalLinearFt * 8) / 400) * waste;
                 
                 let cElec = parseFloat(document.getElementById('cost_elec').value) || 0;
                 let cPlumb = parseFloat(document.getElementById('cost_plumb').value) || 0;
                 let cHvac = parseFloat(document.getElementById('cost_hvac').value) || 0;
+                
+                // --- CORRECTED COUNTING LOGIC (Only appears once now) ---
                 let nElec=0, nPlumb=0, nHvac=0;
-                countPoints.forEach(p => { if(p.type==='elec') nElec++; else if(p.type==='plumb') nPlumb++; else nHvac++; });
+                countPoints.forEach(p => { 
+                    if(p.type==='elec') nElec++; 
+                    else if(p.type==='plumb') nPlumb++; 
+                    else nHvac++; 
+                });
+
+                // Update Specific Displays
+                const elElec = document.getElementById('disp_count_elec');
+                const elPlumb = document.getElementById('disp_count_plumb');
+                const elHvac = document.getElementById('disp_count_hvac');
+
+                if(elElec) elElec.innerText = nElec;
+                if(elPlumb) elPlumb.innerText = nPlumb;
+                if(elHvac) elHvac.innerText = nHvac;
+                // -------------------------------------
 
                 let totalCost = (sheets*pSheet) + (paint*pPaint) + (nElec*cElec) + (nPlumb*cPlumb) + (nHvac*cHvac);
                 
@@ -533,18 +580,26 @@
                 document.getElementById('lbl_paint').innerText = "Paint " + cur;
                 document.getElementById('disp_cost').innerText = cur + totalCost.toFixed(2);
 
-                document.getElementById('hidden_currency').value = cur;
-                document.getElementById('hidden_feet').value = totalLinearFt.toFixed(2);
-                document.getElementById('hidden_cost').value = totalCost.toFixed(2);
-                document.getElementById('hidden_sheets').value = sheets;
-                document.getElementById('hidden_paint').value = paint;
-                document.getElementById('hidden_count_elec').value = nElec;
-                document.getElementById('hidden_count_plumb').value = nPlumb;
-                document.getElementById('hidden_count_hvac').value = nHvac;
-                document.getElementById('hidden_waste_percent').value = wasteVal;
-
                 checkFreeTrial();
-            } catch(e) {}
+            } catch(e) { console.log(e); }
+        }
+        // NEW: Calculates the perimeter of a polygon (room)
+        function getPolyPerimeter(points) {
+            if (points.length < 2) return 0;
+            let perimeter = 0;
+            for (let i = 0; i < points.length; i++) {
+                let p1 = points[i];
+                let p2 = points[(i + 1) % points.length]; // Wraps around to the first point to close the loop
+        
+                // Pythagorean theorem to find distance between p1 and p2
+                let dist = Math.sqrt(Math.pow(p2.x - p1.x, 2) + Math.pow(p2.y - p1.y, 2));
+                perimeter += dist;
+            }
+            return perimeter;
+        }
+        function toggleWastePopup() {
+            const popup = document.getElementById('wastePopup');
+            popup.classList.toggle('hidden');
         }
     </script>
 </head>
@@ -568,7 +623,34 @@
         <div class="modal-box">
             <span class="modal-close" onclick="closeModal('guideModal')">&times;</span>
             <div class="modal-title">Controls Guide</div>
-            <div class="modal-text"><b>📏 Scale:</b> First step! Draw line over known length -> Enter feet.<br><b>📐 Area:</b> Click room corners -> Click 'Save'.<br><b>👆 Count:</b> Click items to count.<br><b>✋ Pan:</b> Drag to move blueprint.<br><b>🔍 Zoom:</b> Use dropdown or scroll.</div>
+            
+            <div class="modal-text">
+                <b>📏 Scale:</b> First step! Draw line over known length -> Enter feet.<br>
+                <b>📐 Area:</b> Click room corners -> Click 'Save'.<br>
+                <b>👆 Count:</b> Click items to count.<br>
+                <b>✋ Pan:</b> Drag to move blueprint.<br>
+                <b>🔍 Zoom:</b> Use dropdown or scroll.
+            </div>
+
+            <div style="border-top: 1px solid #e5e7eb; margin: 15px 0; padding-top: 10px;"></div>
+            <div class="modal-title" style="font-size: 16px;">Slider Settings</div>
+            <div class="modal-text">
+                <b>Sensitivity:</b> (Detection Power)<br>
+                ⬅️ <b>Left:</b> Detects only bold/dark lines.<br>
+                ➡️ <b>Right:</b> Detects faint lines (might catch noise).<br><br>
+
+                <b>Gap Fill:</b> (Connects broken lines)<br>
+                ⬅️ <b>Left:</b> Fills tiny gaps only.<br>
+                ➡️ <b>Right:</b> Bridges large gaps between walls.<br><br>
+
+                <b>Min Wall Length:</b> (Filters noise)<br>
+                ⬅️ <b>Left:</b> Keeps short lines/details.<br>
+                ➡️ <b>Right:</b> Ignores short lines (cleaner).<br><br>
+
+                <b>Waste %:</b> (Safety Margin)<br>
+                ⬅️ <b>Left:</b> 0% extra material.<br>
+                ➡️ <b>Right:</b> Adds up to 20% to cost estimate.
+            </div>
         </div>
     </div>
 
@@ -599,7 +681,7 @@
             <button onclick="saveProject()" class="header-btn">💾 Save</button>
             <button onclick="document.getElementById('loadProjectInput').click()" class="header-btn">📂 Load</button>
             <input type="file" id="loadProjectInput" style="display:none" onchange="loadProject(this)" accept=".json">
-            <button onclick="openGuide()" class="header-btn">ℹ️ Guide</button>
+            <button onclick="openModal('guideModal')" class="header-btn">ℹ️ Guide</button>
 
             <form id="download_form" action="/download_report" method="post" style="display:flex; gap:10px;">
                 <input type="hidden" name="final_feet" id="hidden_feet"><input type="hidden" name="final_cost" id="hidden_cost">
@@ -617,33 +699,41 @@
         {% endif %}
     </div>
 
+    {% if result %}
+    <div class="toolbar-strip">
+        <div class="toolbar-scroll-container">
+            <button class="scroll-btn-h" onclick="scrollToolbar(-1)">◀</button>
+            <div class="toolbar-inner" id="toolbarContent">
+                <button class="tool-btn" id="btnScaleMode" onclick="setMode('scale')" data-tooltip="Calibrate Scale">📏</button>
+                <div class="tool-sep"></div>
+                <button class="tool-btn" id="btnAreaMode" onclick="setMode('area')" data-tooltip="Measure Area">📐</button>
+                <button class="tool-btn hidden" id="btnSaveArea" onclick="saveCurrentArea()" style="color:#2ea043; font-weight:900;" data-tooltip="Save Area">💾</button>
+                <div class="tool-sep"></div>
+                <button class="tool-btn" id="btnCountMode" onclick="setMode('count')" data-tooltip="Count Items">👆</button>
+                <select id="catSelector" class="hidden" onchange="currentCategory=this.value" style="font-size:11px; width:auto; padding: 0 5px;">
+                    <option value="elec">⚡ Electrical</option>
+                    <option value="plumb">🚿 Plumbing</option>
+                    <option value="hvac">❄️ HVAC</option>
+                </select>
+                <div class="tool-sep"></div>
+                <button class="tool-btn" id="btnMeasureMode" onclick="setMode('measure')" data-tooltip="Tape Measure">📏</button>
+                <button class="tool-btn" id="btnPanMode" onclick="setMode('pan')" data-tooltip="Pan View">✋</button>
+                <div class="tool-sep"></div>
+                <button class="tool-btn" onclick="undoAction()" data-tooltip="Undo Last">↩️</button>
+                <button class="tool-btn" onclick="clearTools()" style="color:#d32f2f;" data-tooltip="Reset All">🗑️</button>
+                <button class="tool-btn" onclick="downloadCanvas()" data-tooltip="Save Image">📷</button>
+            </div>
+            <button class="scroll-btn-h" onclick="scrollToolbar(1)">▶</button>
+        </div>
+    </div>
+    {% endif %}
+
     <div class="app-body">
         
         <div class="workspace-center">
             {% if result %}
             <input type="hidden" id="raw_pixels_store" value="{{ raw_pixels }}">
             <input type="hidden" id="raw_width_store" value="{{ raw_width }}">
-
-            <div class="floating-toolbar">
-                <button class="scroll-btn-v" onclick="scrollToolbar(-1)">▲</button>
-                <div class="toolbar-inner" id="toolbarContent">
-                    <button class="tool-btn" id="btnScaleMode" onclick="setMode('scale')" data-tooltip="Calibrate Scale">📏</button>
-                    <div class="tool-sep"></div>
-                    <button class="tool-btn" id="btnAreaMode" onclick="setMode('area')" data-tooltip="Measure Area">📐</button>
-                    <button class="tool-btn hidden" id="btnSaveArea" onclick="saveCurrentArea()" style="color:#2ea043; font-weight:900;" data-tooltip="Save Area">💾</button>
-                    <div class="tool-sep"></div>
-                    <button class="tool-btn" id="btnCountMode" onclick="setMode('count')" data-tooltip="Count Items">👆</button>
-                    <select id="catSelector" class="hidden" onchange="currentCategory=this.value" style="font-size:10px; width:40px;"><option value="elec">⚡</option><option value="plumb">🚿</option><option value="hvac">❄️</option></select>
-                    <div class="tool-sep"></div>
-                    <button class="tool-btn" id="btnMeasureMode" onclick="setMode('measure')" data-tooltip="Tape Measure">📏</button>
-                    <button class="tool-btn" id="btnPanMode" onclick="setMode('pan')" data-tooltip="Pan View">✋</button>
-                    <div class="tool-sep"></div>
-                    <button class="tool-btn" onclick="undoAction()" data-tooltip="Undo Last">↩️</button>
-                    <button class="tool-btn" onclick="clearTools()" style="color:#d32f2f;" data-tooltip="Reset All">🗑️</button>
-                    <button class="tool-btn" onclick="downloadCanvas()" data-tooltip="Save Image">📷</button>
-                </div>
-                <button class="scroll-btn-v" onclick="scrollToolbar(1)">▼</button>
-            </div>
 
             <div class="canvas-container">
                 <div style="position: relative; width:100%; height:100%; display:flex; justify-content:center; align-items:center;">
@@ -671,12 +761,25 @@
     {% if result %}
     <div class="footer-bar">
         <div class="footer-group">
-            <div style="display:flex; align-items:center; gap:5px;">
-                <label style="font-size:10px; color:#4b5563; font-weight:bold;">WASTE: <span id="waste_display" style="color:#0a0e17;">0%</span></label>
-                <input type="range" id="waste_slider" min="0" max="20" step="5" value="0" oninput="recalc()" style="width:80px; accent-color:#0a0e17;">
+            <div style="position:relative;">
+                <button onclick="toggleWastePopup()" class="metric-mini" style="cursor:pointer; background:#f3f4f6; border:1px solid #9ca3af; font-weight:bold; height: 100%; display:flex; align-items:center; gap:5px;">
+                    WASTE % <span style="font-size:10px;">▼</span>
+                </button>
+
+                <div id="wastePopup" class="hidden" style="position:absolute; bottom:60px; left:0; background:white; padding:15px; border-radius:8px; box-shadow:0 10px 25px rgba(0,0,0,0.3); border:1px solid #d1d5db; width:200px; z-index:1000; text-align: left;">
+                    <div style="display:flex; justify-content:space-between; margin-bottom:10px; align-items:center;">
+                        <span style="font-size:11px; font-weight:bold; color:#4b5563; text-transform:uppercase;">Safety Margin</span>
+                        <span id="waste_display" style="font-size:14px; font-weight:900; color:#0a0e17;">0%</span>
+                    </div>
+                    <input type="range" id="waste_slider" min="0" max="20" step="5" value="0" oninput="recalc()" style="width:100%; accent-color:#0a0e17; height:6px; cursor:pointer;">
+                </div>
             </div>
             
             <div class="metric-mini"><label>Width (ft)</label><input type="number" id="real_width_input" class="input-mini" value="50" oninput="recalc()"></div>
+            <div class="metric-mini">
+                <label>Height (ft)</label>
+                <input type="number" id="wall_height_input" class="input-mini" value="8" oninput="recalc()">
+            </div>
             <div class="metric-mini"><label id="lbl_sheet">Sheet $</label><input type="number" id="cost_sheet" class="input-mini" value="15" oninput="recalc()"></div>
             <div class="metric-mini"><label id="lbl_paint">Paint $</label><input type="number" id="cost_paint" class="input-mini" value="40" oninput="recalc()"></div>
              
@@ -692,9 +795,24 @@
             </select>
         </div>
         <div class="footer-group" style="gap:20px;">
+            <div class="metric-mini" style="border: none; background: transparent; text-align:left;">
+                <label>WALL SQ.FT</label>
+                <div class="val" id="disp_wall_area">---</div>
+            </div>
             <div class="metric-mini" style="border:none; background:transparent; text-align:left;"><label>FEET</label><div class="val" id="disp_feet">---</div></div>
             <div class="metric-mini" style="border:none; background:transparent; text-align:left;"><label>SQ.FT</label><div class="val" id="disp_area">---</div></div>
-            <div class="metric-mini" style="border:none; background:transparent; text-align:left;"><label>COUNT</label><div class="val" id="disp_count">0</div></div>
+            <div class="metric-mini" style="border:none; background:transparent; text-align:left;">
+                <label style="color:#4b5563;">ELEC ⚡</label>
+                <div class="val" id="disp_count_elec" style="color:#000000;">0</div>
+            </div>
+            <div class="metric-mini" style="border:none; background:transparent; text-align:left;">
+                <label style="color:#4b5563;">PLUMB 🚿</label>
+                <div class="val" id="disp_count_plumb" style="color:#000000;">0</div>
+            </div>
+            <div class="metric-mini" style="border:none; background:transparent; text-align:left;">
+                <label style="color:#4b5563;">HVAC ❄️</label>
+                <div class="val" id="disp_count_hvac" style="color:#000000;">0</div>
+            </div>
             <div class="metric-mini" style="border: 2px solid #0a0e17; padding: 5px 15px;"><label style="color:#0a0e17;">ESTIMATE</label><div class="val" id="disp_cost" style="font-size:22px;">---</div></div>
         </div>
     </div>
