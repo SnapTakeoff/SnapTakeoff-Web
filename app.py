@@ -1,17 +1,15 @@
 import base64
-import numpy as np
-import cv2
-import pandas as pd
 import io
 import os
 import json 
-import fitz # PyMuPDF
 from flask import Flask, render_template, request, send_file
 
 app = Flask(__name__, template_folder='.')
 
 # --- IMPROVED IMAGE PROCESSING LOGIC ---
 def process_walls(file_stream, thresh, min_len, gap, thick):
+    import cv2
+    import numpy as np
     # Read file stream into numpy array
     if isinstance(file_stream, bytes):
         file_bytes = np.frombuffer(file_stream, np.uint8)
@@ -92,6 +90,7 @@ def tool():
 
     # Process PDF or Image
     if file.filename.lower().endswith('.pdf'):
+        import fitz
         doc = fitz.open(stream=file.read(), filetype="pdf")
         page = doc.load_page(0)
         pix = page.get_pixmap(dpi=200) # Higher DPI for better detection
@@ -113,6 +112,7 @@ def tool():
 
 @app.route('/download_report', methods=['POST'])
 def download_report():
+    import pandas as pd
     try:
         feet = float(request.form.get('final_feet', 0))
         cost = float(request.form.get('final_cost', 0))
