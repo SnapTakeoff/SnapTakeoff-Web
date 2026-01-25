@@ -261,7 +261,24 @@
         
         function showLoading() { document.getElementById('loading-overlay').classList.remove('hidden'); }
         function checkFreeTrial() { if (localStorage.getItem('snaptakeoff_trial_used')) { const btn = document.getElementById('btn-free-trial'); if(btn) btn.classList.add('hidden'); } }
-        function useFreeTrial() { if(confirm("🎁 Use your 1-time FREE UNLOCK now?")) { localStorage.setItem('snaptakeoff_trial_used', 'true'); document.getElementById('download_form').submit(); } }
+        
+        // 1. Opens the warning window
+        function useFreeTrial() {
+            openModal('trialModal');
+        }
+
+        // 2. Actually executes the download (attached to the "Confirm" button)
+        function confirmFreeTrial() {
+            closeModal('trialModal');
+            localStorage.setItem('snaptakeoff_trial_used', 'true');
+            
+            // Hide the button immediately so they can't click it again
+            const btn = document.getElementById('btn-free-trial');
+            if(btn) btn.classList.add('hidden');
+
+            document.getElementById('download_form').submit();
+        }
+
         function startPayment() { var options = { "key": "rzp_test_YOUR_KEY_HERE", "amount": "19900", "currency": "INR", "name": "SnapTakeoff Pro", "description": "Unlock Excel Estimate", "image": "/favicon.ico", "theme": { "color": "#FFC107" }, "handler": function (response){ document.getElementById('download_form').submit(); } }; var rzp1 = new Razorpay(options); rzp1.open(); return false; }
 
         let areaPoints = []; let savedAreas = []; let countPoints = []; let scalePoints = []; let measurePoints = [];
@@ -737,9 +754,19 @@
                 if(elHvac) elHvac.innerText = nHvac;
                 // -------------------------------------
 
-                let totalCost = (sheets*pSheet) + (paint*pPaint) + (nElec*cElec) + (nPlumb*cPlumb) + (nHvac*cHvac);
+                // --- NEW FLOORING LOGIC ---
+                // 1. Get flooring price per sq.ft
+                let pFloor = parseFloat(document.getElementById('cost_floor').value) || 0;
+
+                // 2. Add (totalSqFt * pFloor) to the formula
+                let totalCost = (sheets*pSheet) + (paint*pPaint) + (totalSqFt * pFloor) + (nElec*cElec) + (nPlumb*cPlumb) + (nHvac*cHvac);
                 
+                // 3. Update the Label Text (to show current currency)
                 let cur = document.getElementById('currency_select').value;
+                const floorLbl = document.getElementById('lbl_floor');
+                if(floorLbl) floorLbl.innerText = "Flooring Price (" + cur + "/sq.ft)";
+                
+                
                 document.getElementById('lbl_sheet').innerText = "Sheet " + cur;
                 document.getElementById('lbl_paint').innerText = "Paint " + cur;
                 document.getElementById('disp_cost').innerText = cur + totalCost.toFixed(2);
@@ -761,6 +788,7 @@
                 
                 document.getElementById('hidden_unit_sheet').value = pSheet;
                 document.getElementById('hidden_unit_paint').value = pPaint;
+                document.getElementById('hidden_unit_floor').value = pFloor;
                 
                 // 4. Pass Item Unit Prices (New)
                 document.getElementById('hidden_unit_elec').value = cElec;
@@ -849,6 +877,29 @@
         </div>
     </div>
 
+    <div id="trialModal" class="modal-overlay hidden" onclick="if(event.target===this) closeModal('trialModal')">
+        <div class="modal-box" style="border-top: 5px solid #FFC107;">
+            <span class="modal-close" onclick="closeModal('trialModal')">&times;</span>
+            <div class="modal-title" style="color:#b45309;">⚠️ One-Time Warning</div>
+            
+            <div class="modal-text" style="font-size:15px;">
+                You are about to use your <b>single free unlock</b>.
+                <br><br>
+                Once you click confirm:
+                <ul style="margin-left:20px; margin-top:5px; margin-bottom:15px;">
+                    <li>The Excel file will download immediately.</li>
+                    <li>You <b>cannot</b> use this free trial again.</li>
+                </ul>
+                Please <b>recheck your measurements</b> (scale, walls, prices) before proceeding.
+            </div>
+
+            <div style="display:flex; gap:10px; margin-top:20px;">
+                <button onclick="closeModal('trialModal')" style="flex:1; padding:12px; background:#e5e7eb; color:#374151; border:none; border-radius:6px; font-weight:bold; cursor:pointer;">Go Back</button>
+                <button onclick="confirmFreeTrial()" style="flex:1; padding:12px; background:#FFC107; color:#000; border:none; border-radius:6px; font-weight:bold; cursor:pointer;">Confirm & Unlock</button>
+            </div>
+        </div>
+    </div>
+
     <div id="loading-overlay" class="loading-overlay hidden">
         <div class="spinner"></div><h2 style="font-family: monospace;">PROCESSING...</h2>
     </div>
@@ -872,7 +923,7 @@
 
             <button id="btnLoupeToggle" onclick="toggleLoupe()" class="header-btn">🔍 Magnifier</button>
 
-            <button onclick="openModal('configModal')" class="header-btn">⚙️ Sensor Config</button>
+            <button onclick="openModal('configModal')" class="header-btn">🎚️ Sensor Config</button>
             <button onclick="saveProject()" class="header-btn">💾 Save</button>
             <button onclick="document.getElementById('loadProjectInput').click()" class="header-btn">📂 Load</button>
             <input type="file" id="loadProjectInput" style="display:none" onchange="loadProject(this)" accept=".json">
@@ -883,6 +934,7 @@
                 <input type="hidden" name="final_cost" id="hidden_cost">
                 <input type="hidden" name="final_sheets" id="hidden_sheets">
                 <input type="hidden" name="final_paint" id="hidden_paint">
+                <input type="hidden" name="unit_price_floor" id="hidden_unit_floor">
                 <input type="hidden" name="final_area" id="hidden_area">
                 <input type="hidden" name="area_breakdown" id="hidden_area_breakdown">
                 <input type="hidden" name="currency_symbol" id="hidden_currency">
@@ -963,6 +1015,10 @@
                 <div class="input-row">
                     <label id="lbl_paint">Paint Price ($)</label>
                     <input type="number" id="cost_paint" class="sidebar-input" value="40" oninput="recalc()">
+                </div>
+                <div class="input-row">
+                    <label id="lbl_floor">Flooring Price ($/sq.ft)</label>
+                    <input type="number" id="cost_floor" class="sidebar-input" value="5" oninput="recalc()">
                 </div>
                 <input type="hidden" id="cost_elec" value="5">
                 <input type="hidden" id="cost_plumb" value="150">
