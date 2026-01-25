@@ -28,7 +28,7 @@
         
         .header-btn, .header-select {
             padding: 6px 12px; border-radius: 4px; font-weight: bold; font-size: 13px; cursor: pointer; 
-            border: 1px solid white; background: white; color: #0a0e17; transition: 0.2s;
+            border: 1px solid rgb(59, 59, 59); background: rgb(41, 41, 41); color: #ffffff; transition: 0.2s;
         }
         .header-btn:hover, .header-select:hover {
             background: #2563eb; color: white; border-color: #2563eb;   
@@ -36,8 +36,8 @@
         .header-btn.active {
             background: #2563eb; color: white; border-color: #2563eb;
         }
-        .btn-dl { background: white; color: #2563eb; border: 1px solid #2563eb; transition: 0.2s; }
-        .btn-dl:hover { background: #2563eb; color: white; }
+        .btn-dl { background: rgb(41, 41, 41); color: white; border: 1px solid rgb(59, 59, 59); transition: 0.2s; }
+        .btn-dl:hover { background: #ffd900; color: rgb(0, 0, 0); border: #ffd900;}
 
         /* 2. TOOLBAR STRIP (Middle - Attached) */
         .toolbar-strip {
@@ -84,7 +84,7 @@
         /* 3. APP BODY / WORKSPACE (Bottom) */
         .app-body { display: flex; flex: 1; overflow: hidden; position: relative; }
 
-        .workspace-center { flex: 1; display: flex; flex-direction: column; background-color: #f3f4f6; position: relative; min-width: 0; }
+        .workspace-center { flex: 1; display: flex; flex-direction: column; background-color: #303030; position: relative; min-width: 0; }
 
         /* --- CENTER UPLOAD AREA --- */
         .upload-center {
@@ -157,29 +157,21 @@
         .room-chip .del-btn { cursor: pointer; font-weight: 900; font-size: 14px; opacity: 0.8; }
 
         .canvas-container {
-            flex: 1; overflow: auto; display: flex; align-items: center; justify-content: center;
-            background: transparent; padding: 10px; position: relative;
+            flex: 1; 
+            overflow: auto; 
+            display: flex; /* Keep flexbox */
+            /* REMOVE align-items/justify-content center from here if they exist */
+            background: transparent; 
+            padding: 10px; 
+            position: relative;
         }
+
         canvas { 
             box-shadow: 0 5px 25px rgba(0,0,0,0.2); background: white; 
             max-width: 100%; max-height: 100%; object-fit: contain;
         }
 
         /* FOOTER */
-        .footer-bar {
-            height: 70px; background-color: #d1d5db; color: #0a0e17; 
-            display: flex; align-items: center; justify-content: space-between; padding: 0 30px; 
-            border-top: 1px solid #9ca3af; flex-shrink: 0; z-index: 30;
-            box-shadow: 0 -4px 10px rgba(0,0,0,0.1);
-        }
-        .footer-group { display: flex; gap: 15px; align-items: center; }
-        
-        .metric-mini {
-            background: white; padding: 5px 12px; border-radius: 4px; 
-            border: 1px solid #9ca3af; text-align: center; box-shadow: 0 1px 2px rgba(0,0,0,0.05);
-        }
-        .metric-mini label { display: block; font-size: 9px; color: #4b5563; margin-bottom: 2px; text-transform: uppercase; font-weight: bold; }
-        .metric-mini .val { font-size: 15px; font-weight: 900; color: #0a0e17; font-family: monospace; }
         
         .input-mini {
             background: #f9fafb; border: 1px solid #9ca3af; color: #0a0e17;
@@ -195,6 +187,58 @@
             border: 6px solid #30363d; border-top: 6px solid #FFC107; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin-bottom: 20px;
         }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        /* --- 3. APP BODY (Sidebars + Workspace) --- */
+        .app-body { 
+            display: flex; flex-direction: row; /* Horizontal Layout */
+            flex: 1; overflow: hidden; position: relative; 
+            height: calc(100vh - 100px);
+        }
+
+        /* SIDEBAR STYLES (Light Mode) */
+        .sidebar {
+            width: 280px; /* Fixed width */
+            background-color: #ffffff; /* White background */
+            border-right: 1px solid #e5e7eb; /* Light gray border */
+            border-left: 1px solid #e5e7eb;
+            display: flex; flex-direction: column;
+            padding: 20px;
+            overflow-y: auto; /* Vertical Scroll if needed */
+            flex-shrink: 0;
+            gap: 20px;
+            z-index: 20;
+        }
+        .sidebar-right { border-left: 1px solid #e5e7eb; border-right: none; }
+
+        /* Panels inside Sidebar */
+        .panel-group {
+            background: #dddddd; /* Very light gray box */
+            border: 1px solid #929292;
+            border-radius: 8px;
+            padding: 15px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+        .panel-title {
+            font-size: 11px; font-weight: 800; color: #000000; text-transform: uppercase;
+            margin-bottom: 10px; display: block; letter-spacing: 0.5px;
+        }
+
+        /* Inputs in Sidebar */
+        .input-row { margin-bottom: 12px; }
+        .input-row label { display: block; font-size: 12px; margin-bottom: 5px; color: #374151; font-weight: 600; }
+        .sidebar-input {
+            width: 100%; background: #ffffff; border: 1px solid #d1d5db; color: #111827;
+            padding: 8px; border-radius: 4px; font-weight: bold; font-family: monospace; font-size: 14px;
+        }
+        .sidebar-input:focus { outline: none; border-color: #2563eb; ring: 2px solid #bfdbfe; }
+
+        /* Result Display Boxes (Right Panel) */
+        .result-box {
+            background: #ffffff; border: 1px solid #e5e7eb; border-radius: 6px; 
+            padding: 10px; margin-bottom: 8px;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .result-label { font-size: 11px; font-weight: bold; color: #6b7280; }
+        .result-val { font-size: 16px; font-weight: 900; color: #111827; font-family: monospace; }
     </style>
     
     <script>
@@ -224,6 +268,8 @@
         let mode = 'none'; let currentCategory = 'elec'; let isLoupeEnabled = false; 
         let canvas, ctx, bgImage; let mouseX = 0, mouseY = 0;
         let currentZoom = 1.0; let isPanning = false; let startPanX = 0, startPanY = 0;
+        let savedCutouts = []; // Stores the cutouts
+        let cutoutPoints = []; // Stores the active points while drawing
 
         function initCanvas(imgDataStr) {
             canvas = document.getElementById('blueprintCanvas'); ctx = canvas.getContext('2d');
@@ -247,10 +293,69 @@
                 else if (mode === 'count') { countPoints.push({x, y, type: currentCategory}); updateCountDisplay(); recalc(); } 
                 else if (mode === 'scale') { scalePoints.push({x, y}); if (scalePoints.length === 2) { redrawCanvas(); setTimeout(finalizeScale, 50); } } 
                 else if (mode === 'measure') { measurePoints.push({x, y}); redrawCanvas(); }
+                else if (mode === 'cutout') {
+                    cutoutPoints.push({x, y});
+                    // If we have 2 points, we have a line! Save it.
+                    if (cutoutPoints.length === 2) {
+                        savedCutouts.push([...cutoutPoints]); // Save the line
+                        cutoutPoints = []; // Reset for next one
+                        recalc(); 
+                    }
+                }
                 redrawCanvas();
             });
             canvas.addEventListener('mouseup', function() { if (mode === 'pan') { isPanning = false; canvas.style.cursor = 'grab'; } });
             canvas.addEventListener('mouseleave', function() { isPanning = false; });
+
+            // --- UPDATED: CAD-STYLE MOUSE ZOOM ---
+            canvas.addEventListener('wheel', function(e) {
+                e.preventDefault();
+
+                const container = document.querySelector('.canvas-container');
+                const rect = container.getBoundingClientRect();
+
+                // 1. Get mouse position relative to the viewport (the visible box)
+                const mouseX = e.clientX - rect.left;
+                const mouseY = e.clientY - rect.top;
+
+                // 2. Get the "absolute" point on the blueprint under the mouse
+                //    (Current Scroll + Mouse Offset)
+                const contentX = container.scrollLeft + mouseX;
+                const contentY = container.scrollTop + mouseY;
+
+                // 3. Determine New Zoom Level
+                const zoomIntensity = 0.1;
+                let newZoom = currentZoom;
+
+                if (e.deltaY < 0) {
+                    newZoom += zoomIntensity; // Scroll Up -> Zoom In
+                } else {
+                    newZoom -= zoomIntensity; // Scroll Down -> Zoom Out
+                }
+
+                // Safety Limits
+                if (newZoom < 0.1) newZoom = 0.1;
+                if (newZoom > 5.0) newZoom = 5.0;
+
+                // 4. Calculate the Scale Factor (How much are we growing/shrinking?)
+                //    This is crucial: NewZoom / OldZoom tells us the % change
+                const scaleFactor = newZoom / currentZoom;
+
+                // 5. Update the Canvas Size
+                currentZoom = newZoom;
+                const newWidth = canvas.width * currentZoom;
+                
+                canvas.style.maxWidth = 'none';
+                canvas.style.maxHeight = 'none';
+                canvas.style.width = newWidth + 'px';
+                canvas.style.height = 'auto'; // Aspect ratio handles Y scaling automatically
+
+                // 6. CORRECT THE SCROLL POSITION
+                //    Formula: (Old Absolute Point * Scale Factor) - Mouse Offset
+                container.scrollLeft = (contentX * scaleFactor) - mouseX;
+                container.scrollTop = (contentY * scaleFactor) - mouseY;
+
+            }, { passive: false });
         }
 
         // --- JS TOOLTIPS (FLOATING) ---
@@ -374,8 +479,22 @@
 
         function setZoom(val) {
             if(!canvas) return;
-            if(val === 'fit') { canvas.style.maxWidth = '100%'; canvas.style.maxHeight = '100%'; canvas.style.width = 'auto'; canvas.style.height = 'auto'; } 
-            else { const scale = parseFloat(val); const newWidth = canvas.width * scale; canvas.style.maxWidth = 'none'; canvas.style.maxHeight = 'none'; canvas.style.width = newWidth + 'px'; canvas.style.height = 'auto'; }
+            if(val === 'fit') { 
+                canvas.style.maxWidth = '100%'; 
+                canvas.style.maxHeight = '100%'; 
+                canvas.style.width = 'auto'; 
+                canvas.style.height = 'auto';
+                currentZoom = 1.0; // Reset tracking variable
+            } else { 
+                const scale = parseFloat(val);
+                currentZoom = scale; // SYNC GLOBAL VARIABLE
+                
+                const newWidth = canvas.width * scale; 
+                canvas.style.maxWidth = 'none'; 
+                canvas.style.maxHeight = 'none'; 
+                canvas.style.width = newWidth + 'px'; 
+                canvas.style.height = 'auto'; 
+            }
         }
 
         function setMode(newMode) {
@@ -392,6 +511,9 @@
             if (mode === 'measure') document.getElementById('btnMeasureMode').classList.add('active');
             if (mode === 'pan') { document.getElementById('btnPanMode').classList.add('active'); canvas.style.cursor = 'grab'; }
             redrawCanvas();
+            if (mode === 'cutout') document.getElementById('btnCutoutMode').classList.add('active');
+            // Also ensure `cutoutPoints = []` when switching modes
+            if (mode !== 'cutout') cutoutPoints = [];
         }
 
         function finalizeScale() {
@@ -415,6 +537,7 @@
             if (mode === 'area' && areaPoints.length > 0) { areaPoints.pop(); calcArea(); } 
             else if (mode === 'count' && countPoints.length > 0) { countPoints.pop(); updateCountDisplay(); recalc(); } 
             else if (mode === 'measure' && measurePoints.length > 0) { measurePoints.pop(); } 
+            else if (mode === 'cutout' && savedCutouts.length > 0) { savedCutouts.pop(); recalc(); }
             redrawCanvas();
         }
         function clearTools() { if(confirm("Clear All?")) { areaPoints=[]; savedAreas=[]; countPoints=[]; scalePoints=[]; measurePoints=[]; setMode('none'); renderRoomList(); redrawCanvas(); recalc(); } }
@@ -476,6 +599,26 @@
                     ctx.fillStyle = "#FFA500"; ctx.beginPath(); ctx.arc(measurePoints[i].x, measurePoints[i].y, 5, 0, Math.PI*2); ctx.fill();
                 }
             }
+            // Draw Saved Cutouts
+            ctx.lineWidth = 3;
+            ctx.strokeStyle = "#FF0000"; // Red color
+            for(let line of savedCutouts) {
+                ctx.beginPath();
+                ctx.moveTo(line[0].x, line[0].y);
+                ctx.lineTo(line[1].x, line[1].y);
+                ctx.stroke();
+            }
+
+            // Draw Active Cutout Line (while dragging)
+            if (mode === 'cutout' && cutoutPoints.length === 1) {
+                ctx.beginPath();
+                ctx.moveTo(cutoutPoints[0].x, cutoutPoints[0].y);
+                ctx.lineTo(mouseX, mouseY); // Draw to current mouse position
+                ctx.strokeStyle = "#FF0000";
+                ctx.setLineDash([5, 5]);
+                ctx.stroke();
+                ctx.setLineDash([]);
+            }
             if (isLoupeEnabled && mode !== 'none' && mode !== 'pan') {
                 const r = 75, zoom = 4;
                 ctx.save(); ctx.beginPath(); ctx.arc(mouseX, mouseY, r, 0, Math.PI*2); ctx.clip();
@@ -519,6 +662,27 @@
 
                     breakdown.push({name: r.name, sqft: ft.toFixed(2)}); 
                 }
+                // ... loop finishes ...
+
+                // --- NEW: CALCULATE CUTOUTS ---
+                let cutoutHeight = parseFloat(document.getElementById('cutout_height_input').value) || 7.0;
+                let totalCutoutArea = 0;
+
+                for (let line of savedCutouts) {
+                    // Calculate length of the line in pixels
+                    let distPx = Math.sqrt(Math.pow(line[1].x - line[0].x, 2) + Math.pow(line[1].y - line[0].y, 2));
+                    // Convert to feet
+                    let distFt = distPx / scale;
+                    // Area = Width * Height
+                    totalCutoutArea += (distFt * cutoutHeight);
+                }
+
+                // Subtract cutout area from wall area (prevent negative numbers)
+                totalWallSqFt = Math.max(0, totalWallSqFt - totalCutoutArea);
+                // ------------------------------
+
+                // 5. Update Displays
+                document.getElementById('disp_wall_area').innerText = totalWallSqFt.toFixed(2);
                 
                 // 4. Handle Current Drawing
                 if (areaPoints.length > 0) {
@@ -580,6 +744,29 @@
                 document.getElementById('lbl_paint').innerText = "Paint " + cur;
                 document.getElementById('disp_cost').innerText = cur + totalCost.toFixed(2);
 
+                // 1. Pass Totals
+                document.getElementById('hidden_feet').value = totalLinearFt.toFixed(2);
+                document.getElementById('hidden_cost').value = totalCost.toFixed(2);
+                document.getElementById('hidden_sheets').value = sheets.toFixed(2);
+                document.getElementById('hidden_paint').value = paint.toFixed(2);
+                
+                // 2. Pass Counts
+                document.getElementById('hidden_count_elec').value = nElec;
+                document.getElementById('hidden_count_plumb').value = nPlumb;
+                document.getElementById('hidden_count_hvac').value = nHvac;
+                
+                // 3. Pass Config/Unit Prices
+                document.getElementById('hidden_currency').value = cur;
+                document.getElementById('hidden_waste_percent').value = wasteVal;
+                
+                document.getElementById('hidden_unit_sheet').value = pSheet;
+                document.getElementById('hidden_unit_paint').value = pPaint;
+                
+                // 4. Pass Item Unit Prices (New)
+                document.getElementById('hidden_unit_elec').value = cElec;
+                document.getElementById('hidden_unit_plumb').value = cPlumb;
+                document.getElementById('hidden_unit_hvac').value = cHvac;
+
                 checkFreeTrial();
             } catch(e) { console.log(e); }
         }
@@ -600,6 +787,14 @@
         function toggleWastePopup() {
             const popup = document.getElementById('wastePopup');
             popup.classList.toggle('hidden');
+        }
+        function toggleWasteAccordion() {
+            const acc = document.getElementById('wasteAccordion');
+            if (acc.classList.contains('hidden')) {
+                acc.classList.remove('hidden');
+            } else {
+                acc.classList.add('hidden');
+            }
         }
     </script>
 </head>
@@ -684,16 +879,26 @@
             <button onclick="openModal('guideModal')" class="header-btn">ℹ️ Guide</button>
 
             <form id="download_form" action="/download_report" method="post" style="display:flex; gap:10px;">
-                <input type="hidden" name="final_feet" id="hidden_feet"><input type="hidden" name="final_cost" id="hidden_cost">
-                <input type="hidden" name="final_sheets" id="hidden_sheets"><input type="hidden" name="final_paint" id="hidden_paint">
-                <input type="hidden" name="final_area" id="hidden_area"><input type="hidden" name="area_breakdown" id="hidden_area_breakdown">
-                <input type="hidden" name="currency_symbol" id="hidden_currency"><input type="hidden" name="unit_price_sheet" id="hidden_unit_sheet">
-                <input type="hidden" name="unit_price_paint" id="hidden_unit_paint"><input type="hidden" name="count_elec" id="hidden_count_elec">
-                <input type="hidden" name="count_plumb" id="hidden_count_plumb"><input type="hidden" name="count_hvac" id="hidden_count_hvac">
+                <input type="hidden" name="final_feet" id="hidden_feet">
+                <input type="hidden" name="final_cost" id="hidden_cost">
+                <input type="hidden" name="final_sheets" id="hidden_sheets">
+                <input type="hidden" name="final_paint" id="hidden_paint">
+                <input type="hidden" name="final_area" id="hidden_area">
+                <input type="hidden" name="area_breakdown" id="hidden_area_breakdown">
+                <input type="hidden" name="currency_symbol" id="hidden_currency">
+                <input type="hidden" name="unit_price_sheet" id="hidden_unit_sheet">
+                <input type="hidden" name="unit_price_paint" id="hidden_unit_paint">
+                <input type="hidden" name="count_elec" id="hidden_count_elec">
+                <input type="hidden" name="count_plumb" id="hidden_count_plumb">
+                <input type="hidden" name="count_hvac" id="hidden_count_hvac">
                 <input type="hidden" name="waste_percent" id="hidden_waste_percent">
 
+                <input type="hidden" name="unit_elec" id="hidden_unit_elec">
+                <input type="hidden" name="unit_plumb" id="hidden_unit_plumb">
+                <input type="hidden" name="unit_hvac" id="hidden_unit_hvac">
+
                 <button type="button" id="btn-free-trial" onclick="useFreeTrial()" class="header-btn">🎁 Free Trial</button>
-                <button type="button" onclick="startPayment()" class="header-btn btn-dl">🔓 Download Excel (199/-)</button>
+                <button type="button" onclick="startPayment()" class="header-btn btn-dl">💎 Download Excel (199/-)</button>
             </form>
         </div>
         {% endif %}
@@ -708,6 +913,7 @@
                 <div class="tool-sep"></div>
                 <button class="tool-btn" id="btnAreaMode" onclick="setMode('area')" data-tooltip="Measure Area">📐</button>
                 <button class="tool-btn hidden" id="btnSaveArea" onclick="saveCurrentArea()" style="color:#2ea043; font-weight:900;" data-tooltip="Save Area">💾</button>
+                <button class="tool-btn" id="btnCutoutMode" onclick="setMode('cutout')" data-tooltip="Cutout (Draw Width)">✂️</button>
                 <div class="tool-sep"></div>
                 <button class="tool-btn" id="btnCountMode" onclick="setMode('count')" data-tooltip="Count Items">👆</button>
                 <select id="catSelector" class="hidden" onchange="currentCategory=this.value" style="font-size:11px; width:auto; padding: 0 5px;">
@@ -730,93 +936,134 @@
 
     <div class="app-body">
         
-        <div class="workspace-center">
-            {% if result %}
-            <input type="hidden" id="raw_pixels_store" value="{{ raw_pixels }}">
-            <input type="hidden" id="raw_width_store" value="{{ raw_width }}">
-
-            <div class="canvas-container">
-                <div style="position: relative; width:100%; height:100%; display:flex; justify-content:center; align-items:center;">
-                    <canvas id="blueprintCanvas"></canvas>
-                    <div id="roomListOverlay" class="active-project-chips"></div>
+        {% if result %}
+        <div class="sidebar">
+            <div class="panel-group">
+                <span class="panel-title">🧊 Dimensions</span>
+                <div class="input-row">
+                    <label>Blueprint Width (ft)</label>
+                    <input type="number" id="real_width_input" class="sidebar-input" value="50" oninput="recalc()">
+                </div>
+                <div class="input-row">
+                    <label>Wall Height (ft)</label>
+                    <input type="number" id="wall_height_input" class="sidebar-input" value="8" oninput="recalc()">
+                </div>
+                <div class="input-row">
+                    <label>Cutout Height (ft)</label>
+                    <input type="number" id="cutout_height_input" class="sidebar-input" value="7" oninput="recalc()">
                 </div>
             </div>
-            
-            <script>initCanvas("{{ image_data }}"); setTimeout(recalc, 500);</script>
+
+            <div class="panel-group">
+                <span class="panel-title">💰 Material Costs</span>
+                <div class="input-row">
+                    <label id="lbl_sheet">Sheet Price ($)</label>
+                    <input type="number" id="cost_sheet" class="sidebar-input" value="15" oninput="recalc()">
+                </div>
+                <div class="input-row">
+                    <label id="lbl_paint">Paint Price ($)</label>
+                    <input type="number" id="cost_paint" class="sidebar-input" value="40" oninput="recalc()">
+                </div>
+                <input type="hidden" id="cost_elec" value="5">
+                <input type="hidden" id="cost_plumb" value="150">
+                <input type="hidden" id="cost_hvac" value="80">
+            </div>
+
+            <div class="panel-group">
+                <span class="panel-title">🛠️ Settings</span>
+                
+                <button onclick="toggleWasteAccordion()" style="width:100%; padding:8px; background:#ffffff; border:1px solid #b3b3b3; border-radius:4px; cursor:pointer; font-weight:bold; color:#374151; display:flex; justify-content:space-between; margin-bottom:10px;">
+                    Waste % <span id="waste_display">0%</span>
+                </button>
+                <div id="wasteAccordion" class="hidden" style="padding:10px; background:#ffffff; margin-bottom:10px; border-radius: 4px; border:1px solid #b3b3b3;">
+                    <input type="range" id="waste_slider" min="0" max="20" step="5" value="0" oninput="recalc()" style="width:100%; accent-color:#2563eb;">
+                </div>
+
+                <div class="input-row">
+                    <label>Currency</label>
+                    <select id="currency_select" class="sidebar-input" onchange="updateCurrency(this)">
+                        <option value="$">USD ($)</option>
+                        <option value="₹">INR (₹)</option>
+                        <option value="€">EUR (€)</option>
+                        <option value="£">GBP (£)</option>
+                        <option value="C$">CAD</option>
+                        <option value="A$">AUD</option>
+                        <option value="¥">JPY</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="workspace-center">
+            {% if result %}
+                <input type="hidden" id="raw_pixels_store" value="{{ raw_pixels }}">
+                <input type="hidden" id="raw_width_store" value="{{ raw_width }}">
+
+                <div class="canvas-container">
+                    <div style="position: relative; margin: auto; flex-shrink: 0;">
+                        <canvas id="blueprintCanvas"></canvas>
+                        <div id="roomListOverlay" class="active-project-chips"></div>
+                    </div>
+                </div>
+                
+                <script>initCanvas("{{ image_data }}"); setTimeout(recalc, 500);</script>
             
             {% else %}
-            <form id="scan-form" action="/tool" method="post" enctype="multipart/form-data" onsubmit="showLoading()" class="upload-center">
-                <div class="upload-box">
-                    <span class="upload-icon">📂</span>
-                    <div class="upload-text">Upload a blueprint to start</div>
-                    <input type="file" name="file" accept="image/*,.pdf" class="center-file-input" required onchange="updateFileName(this)">
-                    <button type="submit" class="center-btn">INITIATE SCAN</button>
-                </div>
-            </form>
+                <form id="scan-form" action="/tool" method="post" enctype="multipart/form-data" onsubmit="showLoading()" class="upload-center">
+                    <div class="upload-box">
+                        <span class="upload-icon">📂</span>
+                        <div class="upload-text">Upload a blueprint to start</div>
+                        <input type="file" name="file" accept="image/*,.pdf" class="center-file-input" required onchange="updateFileName(this)">
+                        <button type="submit" class="center-btn">INITIATE SCAN</button>
+                    </div>
+                </form>
             {% endif %}
         </div>
 
-    </div>
-
-    {% if result %}
-    <div class="footer-bar">
-        <div class="footer-group">
-            <div style="position:relative;">
-                <button onclick="toggleWastePopup()" class="metric-mini" style="cursor:pointer; background:#f3f4f6; border:1px solid #9ca3af; font-weight:bold; height: 100%; display:flex; align-items:center; gap:5px;">
-                    WASTE % <span style="font-size:10px;">▼</span>
-                </button>
-
-                <div id="wastePopup" class="hidden" style="position:absolute; bottom:60px; left:0; background:white; padding:15px; border-radius:8px; box-shadow:0 10px 25px rgba(0,0,0,0.3); border:1px solid #d1d5db; width:200px; z-index:1000; text-align: left;">
-                    <div style="display:flex; justify-content:space-between; margin-bottom:10px; align-items:center;">
-                        <span style="font-size:11px; font-weight:bold; color:#4b5563; text-transform:uppercase;">Safety Margin</span>
-                        <span id="waste_display" style="font-size:14px; font-weight:900; color:#0a0e17;">0%</span>
-                    </div>
-                    <input type="range" id="waste_slider" min="0" max="20" step="5" value="0" oninput="recalc()" style="width:100%; accent-color:#0a0e17; height:6px; cursor:pointer;">
+        {% if result %}
+        <div class="sidebar sidebar-right">
+            <div class="panel-group">
+                <span class="panel-title">Measurements</span>
+                <div class="result-box">
+                    <span class="result-label">WALL SQ.FT</span>
+                    <span class="result-val" id="disp_wall_area">---</span>
+                </div>
+                <div class="result-box">
+                    <span class="result-label">FLOOR SQ.FT</span>
+                    <span class="result-val" id="disp_area">---</span>
+                </div>
+                <div class="result-box">
+                    <span class="result-label">LINEAR FEET</span>
+                    <span class="result-val" id="disp_feet">---</span>
                 </div>
             </div>
-            
-            <div class="metric-mini"><label>Width (ft)</label><input type="number" id="real_width_input" class="input-mini" value="50" oninput="recalc()"></div>
-            <div class="metric-mini">
-                <label>Height (ft)</label>
-                <input type="number" id="wall_height_input" class="input-mini" value="8" oninput="recalc()">
-            </div>
-            <div class="metric-mini"><label id="lbl_sheet">Sheet $</label><input type="number" id="cost_sheet" class="input-mini" value="15" oninput="recalc()"></div>
-            <div class="metric-mini"><label id="lbl_paint">Paint $</label><input type="number" id="cost_paint" class="input-mini" value="40" oninput="recalc()"></div>
-             
-             <input type="hidden" id="cost_elec" value="5"><input type="hidden" id="cost_plumb" value="150"><input type="hidden" id="cost_hvac" value="80">
-            <select id="currency_select" class="input-mini" onchange="updateCurrency(this)" style="width:70px; border-color:#0a0e17; color:#0a0e17;">
-                <option value="$">USD ($)</option>
-                <option value="₹">INR (₹)</option>
-                <option value="€">EUR (€)</option>
-                <option value="£">GBP (£)</option>
-                <option value="C$">CAD</option>
-                <option value="A$">AUD</option>
-                <option value="¥">JPY</option>
-            </select>
-        </div>
-        <div class="footer-group" style="gap:20px;">
-            <div class="metric-mini" style="border: none; background: transparent; text-align:left;">
-                <label>WALL SQ.FT</label>
-                <div class="val" id="disp_wall_area">---</div>
-            </div>
-            <div class="metric-mini" style="border:none; background:transparent; text-align:left;"><label>FEET</label><div class="val" id="disp_feet">---</div></div>
-            <div class="metric-mini" style="border:none; background:transparent; text-align:left;"><label>SQ.FT</label><div class="val" id="disp_area">---</div></div>
-            <div class="metric-mini" style="border:none; background:transparent; text-align:left;">
-                <label style="color:#4b5563;">ELEC ⚡</label>
-                <div class="val" id="disp_count_elec" style="color:#000000;">0</div>
-            </div>
-            <div class="metric-mini" style="border:none; background:transparent; text-align:left;">
-                <label style="color:#4b5563;">PLUMB 🚿</label>
-                <div class="val" id="disp_count_plumb" style="color:#000000;">0</div>
-            </div>
-            <div class="metric-mini" style="border:none; background:transparent; text-align:left;">
-                <label style="color:#4b5563;">HVAC ❄️</label>
-                <div class="val" id="disp_count_hvac" style="color:#000000;">0</div>
-            </div>
-            <div class="metric-mini" style="border: 2px solid #0a0e17; padding: 5px 15px;"><label style="color:#0a0e17;">ESTIMATE</label><div class="val" id="disp_cost" style="font-size:22px;">---</div></div>
-        </div>
-    </div>
-    {% endif %}
 
+            <div class="panel-group">
+                <span class="panel-title">Item Counts</span>
+                <div class="result-box" style="border-left: 4px solid #00FFFF;">
+                    <span class="result-label" style="color:#008B8B;">ELEC ⚡</span>
+                    <span class="result-val" id="disp_count_elec">0</span>
+                </div>
+                <div class="result-box" style="border-left: 4px solid #FF4500;">
+                    <span class="result-label" style="color:#A02C00;">PLUMB 🚿</span>
+                    <span class="result-val" id="disp_count_plumb">0</span>
+                </div>
+                <div class="result-box" style="border-left: 4px solid #32CD32;">
+                    <span class="result-label" style="color:#1E7E1E;">HVAC ❄️</span>
+                    <span class="result-val" id="disp_count_hvac">0</span>
+                </div>
+            </div>
+
+            <div class="panel-group" style="border-color: #2563eb; background:#eff6ff;">
+                <span class="panel-title" style="color:#2563eb;">Total Estimate</span>
+                <div style="text-align:center; padding:10px;">
+                    <span id="disp_cost" style="font-size:28px; font-weight:900; color:#2563eb; display:block;">---</span>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+    </div>
 </body>
 </html>
