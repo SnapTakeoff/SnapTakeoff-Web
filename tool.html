@@ -37,7 +37,7 @@
             background: #2563eb; color: white; border-color: #2563eb;
         }
         .btn-dl { background: rgb(41, 41, 41); color: white; border: 1px solid rgb(59, 59, 59); transition: 0.2s; }
-        .btn-dl:hover { background: #ffd900; color: rgb(0, 0, 0); border: #ffd900;}
+        .btn-dl:hover { background: #2563eb; color: rgb(255, 255, 255); border: #2563eb;}
 
         /* 2. TOOLBAR STRIP (Middle - Attached) */
         .toolbar-strip {
@@ -239,6 +239,23 @@
         }
         .result-label { font-size: 11px; font-weight: bold; color: #6b7280; }
         .result-val { font-size: 16px; font-weight: 900; color: #111827; font-family: monospace; }
+
+        .excel-download-btn {
+            padding: 6px 12px;
+            border-radius: 4px;
+            font-weight: bold;
+            font-size: 13px;
+            cursor: pointer;
+            border: 1px solid rgb(59, 59, 59);
+            background: rgb(41, 41, 41);
+            color: #ffffff;
+            transition: 0.2s;
+        }
+        .excel-download-btn:hover {
+            background: #2563eb;
+            color: white;
+            border-color: #2563eb;
+        }
     </style>
     
     <script>
@@ -824,6 +841,13 @@
                 acc.classList.add('hidden');
             }
         }
+
+        function submitDownload(url) {
+            const form = document.getElementById('download_form');
+            form.action = url;
+            form.submit();
+        }
+
     </script>
 </head>
 <body onload="checkFreeTrial(); {% if result %}initSens({{ params.thresh }});{% endif %}">
@@ -929,7 +953,7 @@
             <input type="file" id="loadProjectInput" style="display:none" onchange="loadProject(this)" accept=".json">
             <button onclick="openModal('guideModal')" class="header-btn">ℹ️ Guide</button>
 
-            <form id="download_form" action="/download_report" method="post" style="display:flex; gap:10px;">
+            <form id="download_form" method="post" style="display:flex; gap:10px;">
                 <input type="hidden" name="final_feet" id="hidden_feet">
                 <input type="hidden" name="final_cost" id="hidden_cost">
                 <input type="hidden" name="final_sheets" id="hidden_sheets">
@@ -950,7 +974,12 @@
                 <input type="hidden" name="unit_hvac" id="hidden_unit_hvac">
 
                 <button type="button" id="btn-free-trial" onclick="useFreeTrial()" class="header-btn">🎁 Free Trial</button>
-                <button type="button" onclick="startPayment()" class="header-btn btn-dl">💎 Download Excel (199/-)</button>
+                <button type="button" onclick="submitDownload('/download_report')" class="excel-download-btn">
+                    📊 Excel
+                </button>
+                <button type="button" onclick="submitDownload('/download_pdf')" class="excel-download-btn">
+                    📄 PDF
+                </button>
             </form>
         </div>
         {% endif %}

@@ -5,3 +5,4 @@ openpyxl
 gunicorn
 opencv-python-headless
 PyMuPDF
+xhtml2pdf

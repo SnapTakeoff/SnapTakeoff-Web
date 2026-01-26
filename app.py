@@ -63,6 +63,14 @@ def process_walls(file_stream, thresh, min_len, gap, thick):
     
     return img_str, total_pixels, img.shape[1]
 
+def render_pdf(html_text):
+    from xhtml2pdf import pisa
+    pdf_output = io.BytesIO()
+    pisa_status = pisa.CreatePDF(io.BytesIO(html_text.encode('utf-8')), dest=pdf_output)
+    if pisa_status.err: return None
+    pdf_output.seek(0)
+    return pdf_output
+
 # --- ROUTES ---
 
 @app.route('/')
@@ -177,6 +185,73 @@ def download_report():
     output.seek(0)
     
     return send_file(output, download_name="SnapTakeoff_Quote.xlsx", as_attachment=True)
+
+@app.route('/download_pdf', methods=['POST'])
+def download_pdf():
+    import datetime
+    
+    # 1. Gather all the data (Just like the Excel route)
+    try:
+        # Quantities
+        sheets = float(request.form.get('final_sheets', 0))
+        paint = float(request.form.get('final_paint', 0))
+        
+        # Unit Prices
+        unit_sheet = float(request.form.get('unit_price_sheet', 0))
+        unit_paint = float(request.form.get('unit_price_paint', 0))
+        unit_floor = float(request.form.get('unit_price_floor', 0))
+        unit_elec = float(request.form.get('unit_elec', 0))
+        unit_plumb = float(request.form.get('unit_plumb', 0))
+        unit_hvac = float(request.form.get('unit_hvac', 0))
+        
+        # Counts
+        c_elec = int(request.form.get('count_elec', 0))
+        c_plumb = int(request.form.get('count_plumb', 0))
+        c_hvac = int(request.form.get('count_hvac', 0))
+        
+        # Meta
+        cur = request.form.get('currency_symbol', '$')
+        grand_total = float(request.form.get('final_cost', 0))
+        
+        # Room Breakdown
+        area_json = request.form.get('area_breakdown', '[]')
+        rooms_raw = json.loads(area_json)
+        
+        # Calculate Room Totals for the PDF view
+        rooms_clean = []
+        for r in rooms_raw:
+            sq = float(r['sqft'])
+            rooms_clean.append({
+                'name': r['name'],
+                'sqft': sq,
+                'total': f"{sq * unit_floor:.2f}"
+            })
+
+        # 2. Prepare Data for Template
+        context = {
+            'date': datetime.datetime.now().strftime("%Y-%m-%d"),
+            'currency': cur,
+            'sheets': f"{sheets:.0f}", 'unit_sheet': f"{unit_sheet:.2f}", 'total_sheet': f"{sheets*unit_sheet:.2f}",
+            'paint': f"{paint:.1f}", 'unit_paint': f"{unit_paint:.2f}", 'total_paint': f"{paint*unit_paint:.2f}",
+            'unit_floor': f"{unit_floor:.2f}",
+            'rooms': rooms_clean,
+            'count_elec': c_elec, 'unit_elec': f"{unit_elec:.2f}", 'total_elec': f"{c_elec*unit_elec:.2f}",
+            'count_plumb': c_plumb, 'unit_plumb': f"{unit_plumb:.2f}", 'total_plumb': f"{c_plumb*unit_plumb:.2f}",
+            'count_hvac': c_hvac, 'unit_hvac': f"{unit_hvac:.2f}", 'total_hvac': f"{c_hvac*unit_hvac:.2f}",
+            'grand_total': f"{grand_total:.2f}"
+        }
+
+        # 3. Render HTML
+        html = render_template('report_template.html', **context)
+        
+        # 4. Convert to PDF
+        pdf_file = render_pdf(html)
+        if not pdf_file: return "PDF Generation Error"
+        
+        return send_file(pdf_file, download_name="SnapTakeoff_Quote.pdf", as_attachment=True)
+
+    except Exception as e:
+        return f"Error generating PDF: {str(e)}"
 
 @app.route('/favicon.ico')
 def favicon():

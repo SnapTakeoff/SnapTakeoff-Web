@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        @page {
+            size: letter portrait;
+            margin: 2cm;
+            @frame footer {
+                -pdf-frame-content: footerContent;
+                bottom: 1cm;
+                margin-left: 2cm;
+                margin-right: 2cm;
+                height: 1cm;
+            }
+        }
+        
+        body { font-family: Helvetica, sans-serif; color: #333; }
+        
+        /* HEADER SECTION */
+        .header-table { width: 100%; border: none; margin-bottom: 20px; border-bottom: 2px solid #FFC107; padding-bottom: 10px; }
+        .logo { font-size: 24px; font-weight: bold; color: #000; }
+        .title { font-size: 18px; font-weight: bold; color: #555; text-align: right; }
+        .meta { font-size: 10px; color: #777; text-align: right; }
+
+        /* SUMMARY BOX */
+        .summary { background-color: #f9fafb; padding: 15px; border-radius: 5px; margin-bottom: 20px; font-size: 12px; }
+
+        /* DATA TABLE */
+        .data-table { width: 100%; border-collapse: collapse; }
+        
+        /* Specific Column Widths - Forces Alignment */
+        .col-desc { width: 40%; }
+        .col-qty  { width: 20%; text-align: right; }
+        .col-unit { width: 20%; text-align: right; }
+        .col-total { width: 20%; text-align: right; }
+
+        th { 
+            background-color: #333; 
+            color: #fff; 
+            padding: 8px; 
+            font-size: 11px; 
+            font-weight: bold;
+            text-align: left;
+        }
+        /* Right align headers for number columns */
+        th.num-header { text-align: right; }
+
+        td { 
+            padding: 10px 8px; 
+            font-size: 12px; 
+            border-bottom: 1px solid #eee; 
+            vertical-align: middle;
+        }
+
+        .total-row td { 
+            font-weight: bold; 
+            font-size: 14px; 
+            border-top: 2px solid #000; 
+            background-color: #fff9db; 
+            color: #000;
+        }
+
+        /* FOOTER */
+        #footerContent { text-align: center; font-size: 9px; color: #aaa; }
+    </style>
+</head>
+<body>
+    <table class="header-table">
+        <tr>
+            <td style="border:none;">
+                <div class="logo">Snap<span style="color:#FFC107">Takeoff</span></div>
+            </td>
+            <td style="border:none;">
+                <div class="title">Project Estimate</div>
+                <div class="meta">Date: {{ date }}</div>
+            </td>
+        </tr>
+    </table>
+
+    <div class="summary">
+        <strong>Project Summary</strong><br/>
+        This estimate includes material and labor costs based on the digital takeoff.<br/>
+        Currency: {{ currency }}
+    </div>
+
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th class="col-desc">Description</th>
+                <th class="col-qty num-header">Quantity</th>
+                <th class="col-unit num-header">Unit Price</th>
+                <th class="col-total num-header">Total</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td class="col-desc">Drywall / Sheetrock</td>
+                <td class="col-qty">{{ sheets }} sheets</td>
+                <td class="col-unit">{{ currency }}{{ unit_sheet }}</td>
+                <td class="col-total">{{ currency }}{{ total_sheet }}</td>
+            </tr>
+            <tr>
+                <td class="col-desc">Interior Paint</td>
+                <td class="col-qty">{{ paint }} gal</td>
+                <td class="col-unit">{{ currency }}{{ unit_paint }}</td>
+                <td class="col-total">{{ currency }}{{ total_paint }}</td>
+            </tr>
+
+            {% for room in rooms %}
+            <tr>
+                <td class="col-desc">Flooring: {{ room.name }}</td>
+                <td class="col-qty">{{ room.sqft }} sq.ft</td>
+                <td class="col-unit">{{ currency }}{{ unit_floor }}</td>
+                <td class="col-total">{{ currency }}{{ room.total }}</td>
+            </tr>
+            {% endfor %}
+
+            <tr>
+                <td class="col-desc">Electrical Fixtures</td>
+                <td class="col-qty">{{ count_elec }}</td>
+                <td class="col-unit">{{ currency }}{{ unit_elec }}</td>
+                <td class="col-total">{{ currency }}{{ total_elec }}</td>
+            </tr>
+            <tr>
+                <td class="col-desc">Plumbing Fixtures</td>
+                <td class="col-qty">{{ count_plumb }}</td>
+                <td class="col-unit">{{ currency }}{{ unit_plumb }}</td>
+                <td class="col-total">{{ currency }}{{ total_plumb }}</td>
+            </tr>
+            <tr>
+                <td class="col-desc">HVAC / Mechanical</td>
+                <td class="col-qty">{{ count_hvac }}</td>
+                <td class="col-unit">{{ currency }}{{ unit_hvac }}</td>
+                <td class="col-total">{{ currency }}{{ total_hvac }}</td>
+            </tr>
+
+            <tr class="total-row">
+                <td class="col-desc">ESTIMATED TOTAL</td>
+                <td class="col-qty"></td>
+                <td class="col-unit"></td>
+                <td class="col-total">{{ currency }}{{ grand_total }}</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <div id="footerContent">
+        Generated by SnapTakeoff. Estimates are preliminary. Verify all dimensions on site.
+    </div>
+</body>
+</html>
