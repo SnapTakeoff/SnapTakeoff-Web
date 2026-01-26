@@ -185,5 +185,28 @@ def favicon():
         return send_file('favicon.png', mimetype='image/png')
     return "", 204
 
+@app.route('/sitemap.xml')
+def sitemap():
+    # Replace with your ACTUAL Render URL (Important!)
+    base_url = "https://snaptakeoff-web.onrender.com" 
+    
+    xml = f"""<?xml version="1.0" encoding="UTF-8"?>
+    <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+        <url>
+            <loc>{base_url}/</loc>
+            <changefreq>weekly</changefreq>
+            <priority>1.0</priority>
+        </url>
+        <url>
+            <loc>{base_url}/tool</loc>
+            <changefreq>monthly</changefreq>
+            <priority>0.8</priority>
+        </url>
+    </urlset>"""
+    
+    # We import Response here so you don't have to change your top imports
+    from flask import Response 
+    return Response(xml, mimetype='application/xml')
+
 if __name__ == '__main__':
     app.run(debug=True)
