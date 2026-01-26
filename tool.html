@@ -259,6 +259,7 @@
     </style>
     
     <script>
+        let isUnlocked = false;
         function syncInputs(sourceId, targetId) { document.getElementById(targetId).value = document.getElementById(sourceId).value; }
         function openModal(id) { document.getElementById(id).classList.remove('hidden'); }
         function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
@@ -285,18 +286,56 @@
         }
 
         // 2. Actually executes the download (attached to the "Confirm" button)
+        
         function confirmFreeTrial() {
             closeModal('trialModal');
+    
+            // Mark trial as used in browser storage (Permanent)
             localStorage.setItem('snaptakeoff_trial_used', 'true');
-            
-            // Hide the button immediately so they can't click it again
+    
+            // Unlock downloads for this specific session
+            isUnlocked = true; 
+    
+            // Hide the button immediately
             const btn = document.getElementById('btn-free-trial');
             if(btn) btn.classList.add('hidden');
 
-            document.getElementById('download_form').submit();
+            // Default to Excel download for the trial
+            const form = document.getElementById('download_form');
+            form.action = '/download_report'; 
+            form.submit();
         }
 
-        function startPayment() { var options = { "key": "rzp_test_YOUR_KEY_HERE", "amount": "19900", "currency": "INR", "name": "SnapTakeoff Pro", "description": "Unlock Excel Estimate", "image": "/favicon.ico", "theme": { "color": "#FFC107" }, "handler": function (response){ document.getElementById('download_form').submit(); } }; var rzp1 = new Razorpay(options); rzp1.open(); return false; }
+        function startPayment(targetUrl) { 
+            var options = { 
+                "key": "rzp_test_YOUR_KEY_HERE", // <--- PASTE YOUR REAL KEY HERE
+                "amount": "19900", // 199 INR (in paise)
+                "currency": "INR", 
+                "name": "SnapTakeoff Pro", 
+                "description": "Unlock Excel & PDF", 
+                "image": "/favicon.ico", 
+                "theme": { "color": "#FFC107" }, 
+                "handler": function (response){ 
+                    // PAYMENT SUCCESS!
+                    isUnlocked = true; // Unlock the gates
+            
+                    // Trigger the download the user originally wanted
+                    const form = document.getElementById('download_form');
+                    form.action = targetUrl; 
+                    form.submit(); 
+                } 
+            }; 
+    
+            var rzp1 = new Razorpay(options); 
+    
+            // Add failure handling
+            rzp1.on('payment.failed', function (response){
+                alert("Payment Failed: " + response.error.description);
+            });
+
+            rzp1.open(); 
+            return false; 
+        }
 
         let areaPoints = []; let savedAreas = []; let countPoints = []; let scalePoints = []; let measurePoints = [];
         let mode = 'none'; let currentCategory = 'elec'; let isLoupeEnabled = false; 
@@ -843,10 +882,24 @@
         }
 
         function submitDownload(url) {
+        // 1. If they already used Free Trial or Paid, let them pass
+        if (isUnlocked) {
             const form = document.getElementById('download_form');
             form.action = url;
             form.submit();
+            return;
         }
+
+        // 2. Check if they have a Free Trial available?
+        // If they haven't used the trial yet, we prompt them to use the "Free Trial" button instead
+        if (!localStorage.getItem('snaptakeoff_trial_used')) {
+            alert("Please use the 'Free Trial' button to unlock your first download!");
+            return;
+        }
+
+        // 3. If Trial is used AND they haven't paid -> Open Payment
+        startPayment(url); 
+    }
 
     </script>
 </head>
