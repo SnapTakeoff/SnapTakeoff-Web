@@ -210,7 +210,18 @@ def download_pdf():
         c_hvac = int(request.form.get('count_hvac', 0))
         
         # Meta
+        # Meta
         cur = request.form.get('currency_symbol', '$')
+        
+        # --- PDF FONT FIX ---
+        # The PDF engine's default font doesn't support the '₹' symbol.
+        # We replace it with "Rs." so it displays correctly.
+        if cur == '₹': 
+            cur = 'Rs. '
+        elif cur == '€':
+            cur = 'EUR ' # Good practice for Euro too, just in case
+        # --------------------
+
         grand_total = float(request.form.get('final_cost', 0))
         
         # Room Breakdown
